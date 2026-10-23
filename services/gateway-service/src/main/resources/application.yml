@@ -1,0 +1,54 @@
+spring:
+  application.name: ${SERVICE_NAME:gateway-service}
+
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/(?<segment>.*), /api/v1/auth/${segment}
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - RewritePath=/api/user/(?<segment>.*), /api/v1/user/${segment}
+
+        # TODO: THIS IS FOR DEV AND TEST
+        - id: test-service
+          uri: lb://test-service
+          predicates:
+            - Path=/api/test/**
+          # Should not write like this :v
+          filters:
+            - RewritePath=/api/test/(?<segment>.*), /api/v1/test/${segment}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # issuer-uri: ${OAUTH2_ISSUER_URI}
+          jwk-set-uri: ${OAUTH_JWK_SET_URI}
+          audiences: 
+            - gateway
+
+logging:
+  level:
+    root: INFO
+    '[org.springframework.cloud.gateway]': DEBUG
+    '[org.springframework.security]': DEBUG
+    '[org.springframework]': INFO
+    '[reactor.netty]': INFO # Turn off of Reactor Netty log (Spring WebFlux)
+    '[com.example]': DEBUG
+
+# Gateway config
+gateway:
+  identity:
+    skip:
+      - /api/*/auth/**
+      - /public/**
+      - /api/*/test/**

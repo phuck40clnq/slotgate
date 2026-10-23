@@ -1,0 +1,21 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    listener:
+      auto-startup: false
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${DB_NAME:myapp_db}
+    username: ${DB_USER:user}
+    password: ${DB_PASS:user}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        '[format_sql]': true

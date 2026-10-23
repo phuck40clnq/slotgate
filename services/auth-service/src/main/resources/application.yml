@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: ${SERVICE_NAME:auth-service}
+  # TODO: [LATER]
+  # security:
+  #   oauth2:
+  #     authorizationserver:
+  #       issuer: ${OAUTH2_ISSUER_URI}
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        '[schema.registry.url]': ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+        '[value.subject.name.strategy]': io.confluent.kafka.serializers.subject.RecordNameStrategy
+    
+    consumer:
+      group-id: ${SERVICE_NAME:auth-service}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        '[schema.registry.url]': ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+        '[specific.avro.reader]': false
+        '[value.subject.name.strategy]': io.confluent.kafka.serializers.subject.RecordNameStrategy
+
+server:
+  port: ${PORT:8082}
+
+logging:
+  level:
+    root: INFO
+    '[org.springframework]': INFO
+    '[com.example]': DEBUG
+
+app:
+  security:
+    jwt:
+      issuer: ${OAUTH_JWK_SET_URI}
+      access-token-exp: 900 # 15 minutes
+      private-key: classpath:keys/private.pem
+      public-key: classpath:keys/public.pem
+      audiences:
+        - gateway

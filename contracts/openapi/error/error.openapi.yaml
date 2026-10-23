@@ -1,0 +1,15 @@
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required: 
+        - code
+        - message
+        - traceId
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        traceId:
+          type: string

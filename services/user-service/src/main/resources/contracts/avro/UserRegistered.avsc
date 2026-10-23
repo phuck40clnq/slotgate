@@ -1,0 +1,20 @@
+// File: user-service/src/main/resources/contracts/avro/UserRegistered.avsc
+{
+    "name": "UserRegistered",
+    "type": "record",
+    "namespace": "com.example.auth.contract.v1",
+    "fields": [
+        {
+            "name": "userId",
+            "type": "string" 
+        },
+        {
+            "name": "email",
+            "type": "string"
+        },
+        {
+            "name": "occurredAt",
+            "type": { "type": "long", "logicalType": "timestamp-millis" }
+        }
+    ]
+}

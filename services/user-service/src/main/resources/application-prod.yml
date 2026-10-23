@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://prod-db-server:5432/${DB_NAME:myapp_db}
+    username: ${DB_USER:prod}
+    password: ${DB_PASS:prod}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

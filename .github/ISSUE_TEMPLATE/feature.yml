@@ -1,0 +1,95 @@
+name: Feature
+description: Propose new behaviour for a service or the platform.
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the title as a specific, imperative sentence, for example *Hold a seat for a limited time before confirmation*.
+        See the [issue rules](https://github.com/phuck40clnq/slotgate/blob/main/CONTRIBUTING.md#issues).
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - gateway
+        - auth
+        - user
+        - contracts
+        - platform
+        - infra
+        - ci
+        - frontend
+        - new service
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Roadmap phase
+      options:
+        - phase-1 (fault-tolerant core)
+        - phase-2 (multi-tenancy)
+        - phase-3 (observability and investigation)
+        - phase-4 (wrap-up)
+        - not planned yet
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing or wrong today, and who is affected. Link the PRD section if there is one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Proposed behaviour
+      description: What the system does after this change, seen from the outside (API, events, UI).
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Verifiable outcomes. Each one becomes at least one test.
+      placeholder: |
+        - [ ] Two concurrent holds on the last seat result in exactly one success
+        - [ ] A hold that is not confirmed within the configured duration releases the seat
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Contracts (OpenAPI, Avro), database schema, configuration, other services, and whether an ADR is needed.
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What this issue deliberately does not cover.
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: PRD sections, ADRs, related issues, external documentation.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: Every acceptance criterion can be verified by a test or a measurement.
+          required: true

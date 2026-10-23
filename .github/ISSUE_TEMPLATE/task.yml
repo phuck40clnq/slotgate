@@ -1,0 +1,74 @@
+name: Task
+description: Plan documentation, build, CI or maintenance work that adds no new behaviour.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the title as an imperative sentence, for example *Add Spotless formatting to the Java platform*.
+        Apply the `docs` or `chore` label to match the type below.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - docs (documentation only)
+        - build (build system, dependencies, platform)
+        - ci (CI and CD pipelines)
+        - chore (other maintenance)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - gateway
+        - auth
+        - user
+        - contracts
+        - platform
+        - infra
+        - ci
+        - frontend
+        - docs
+        - repository-wide
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this work is needed now.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: The concrete changes, as a checklist.
+      placeholder: |
+        - [ ] Add the Spotless plugin to java-parent
+        - [ ] Format all services in one mechanical commit
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: Related work that belongs in other issues.
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How to verify the task is done.
+      placeholder: |
+        - [ ] `./mvnw verify` fails on unformatted code in every service
+    validations:
+      required: true

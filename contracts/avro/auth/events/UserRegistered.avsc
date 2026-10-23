@@ -1,0 +1,30 @@
+// File: contracts/avro/auth/events/UserRegistered.avsc
+{
+  "type": "record",
+  "name": "UserRegistered",
+  "namespace": "com.example.auth.events",
+  "doc": "Emitted when a user has successfully registered",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string",
+      "doc": "Unique identifier of this event"
+    },
+    {
+      "name": "occurredAt",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Event occurrence time in UTC"
+    },
+    {
+      "name": "userId",
+      "type": "string"
+    },
+    {
+      "name": "email",
+      "type": "string"
+    }
+  ]
+}

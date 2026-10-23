@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: ${SERVICE_NAME:user-service}
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        '[schema.registry.url]': ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+        '[value.subject.name.strategy]': io.confluent.kafka.serializers.subject.RecordNameStrategy
+
+    consumer:
+      group-id: ${SERVICE_NAME:user-service}
+      auto-offset-reset: latest
+      # auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        '[schema.registry.url]': ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+        '[specific.avro.reader]': false
+        '[value.subject.name.strategy]': io.confluent.kafka.serializers.subject.RecordNameStrategy
+
+server:
+  port: ${PORT:8083}
+
+logging:
+  level:
+    root: INFO
+    '[org.springframework]': INFO
+    '[com.example]': DEBUG

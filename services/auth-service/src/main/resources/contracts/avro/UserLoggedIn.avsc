@@ -1,0 +1,25 @@
+// File: auth-service/src/main/resources/contracts/avro/UserLoggedIn.avsc
+{
+  "type": "record",
+  "name": "UserLoggedIn",
+  "namespace": "com.example.auth.events",
+  "doc": "Emitted when a user successfully logs in",
+  "fields": [
+    {
+        "name": "eventId",
+        "type": "string",
+        "doc": "Unique identifier of this event"
+    },
+    {
+      "name": "occurredAt",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Event occurrence time in UTC"
+    },
+    { "name": "userId", "type": "string" },
+    { "name": "ipAddress", "type": ["null", "string"], "default": null },
+    { "name": "userAgent", "type": ["null", "string"], "default": null }
+  ]
+}

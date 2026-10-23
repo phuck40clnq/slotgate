@@ -1,0 +1,99 @@
+name: Bug
+description: Report behaviour that differs from what the contracts, docs or tests say.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the title as the observed symptom, for example *Available seat count goes negative when two holds expire at once*.
+        For an unexpected failure, record it in [docs/incidents](https://github.com/phuck40clnq/slotgate/tree/main/docs/incidents) before fixing it; the investigation is part of the project.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - gateway
+        - auth
+        - user
+        - contracts
+        - platform
+        - infra
+        - ci
+        - frontend
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - critical (wrong result, such as an oversold seat or a lost registration)
+        - major (feature unusable, no workaround)
+        - minor (workaround exists)
+        - cosmetic
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behaviour
+      description: What happened. Facts only, no guesses.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should have happened, with a link to the contract, doc or test that defines it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps from a clean start. Include requests, events or commands.
+      placeholder: |
+        1. docker compose -f infrastructure/kafka/docker-compose.yml up -d
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Logs, trace IDs, event IDs, metrics or screenshots. Paste text, not images of text.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit
+      description: The commit SHA where the bug happens.
+      placeholder: efff362
+    validations:
+      required: true
+
+  - type: textarea
+    id: hypotheses
+    attributes:
+      label: Hypotheses
+      description: Suspected causes and what you already checked. Leave empty if unknown.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: The evidence contains no secrets and no real personal data.
+          required: true

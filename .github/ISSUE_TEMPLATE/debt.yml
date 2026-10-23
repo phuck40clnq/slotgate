@@ -1,0 +1,84 @@
+name: Technical debt
+description: Record code, configuration or documentation that breaks a project standard.
+labels: ["debt"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the title as the fix, for example *Align user-service UserRegistered schema with contracts/*.
+        Debt is fixed in its own pull request, never inside unrelated work.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - gateway
+        - auth
+        - user
+        - contracts
+        - platform
+        - infra
+        - ci
+        - frontend
+        - docs
+    validations:
+      required: true
+
+  - type: dropdown
+    id: rule
+    attributes:
+      label: Standard broken
+      multiple: true
+      options:
+        - coding standard (docs/rules/coding.md)
+        - Java standard (docs/rules/java.md)
+        - testing standard (docs/rules/testing.md)
+        - governance rules (docs/rules/governance.md)
+        - contract policies (contracts/)
+        - contributing rules (CONTRIBUTING.md)
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: Files and lines, as permalinks or `path:line`.
+      placeholder: |
+        services/gateway-service/src/main/java/com/example/gateway/filter/RateLimitFilter.java:3
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and evidence
+      description: What is wrong, which rule it breaks, and proof (output, diff, log).
+    validations:
+      required: true
+
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk if left
+      description: What can go wrong, or what it blocks.
+    validations:
+      required: true
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: Proposed fix
+      description: The intended change, and anything it must not break.
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] The empty class is removed and nothing references it
+        - [ ] A build check prevents the same debt from returning
+    validations:
+      required: true

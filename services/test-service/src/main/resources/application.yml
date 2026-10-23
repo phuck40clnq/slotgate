@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: ${SERVICE_NAME:test-service}
+
+server:
+  port: ${PORT:6868}
+
+logging:
+  level:
+    root: INFO
+    '[org.springframework]': INFO
+    '[com.example]': DEBUG
