@@ -7,9 +7,9 @@ spring:
 
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/${DB_NAME:myapp_db}
-    username: ${DB_USER:user}
-    password: ${DB_PASS:user}
+    url: jdbc:postgresql://localhost:5432/${DB_NAME:slotgate_user}
+    username: ${DB_USER:slotgate_user}
+    password: ${DB_PASS:slotgate_user}
     driver-class-name: org.postgresql.Driver
 
   jpa:

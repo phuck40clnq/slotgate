@@ -99,7 +99,7 @@ Phase lengths will be fixed once the course milestones are known. Each week foll
 ├── contracts/        # OpenAPI and Avro contracts
 ├── docs/             # PRD, architecture, ADRs, rules
 ├── frontend/web/     # Minimal web client
-├── infrastructure/   # Local infrastructure (Kafka)
+├── infrastructure/   # Local infrastructure (PostgreSQL setup, Kafka)
 ├── platform/java/    # Shared Maven BOM and parent POM
 ├── services/         # Backend services
 └── templates/        # Service templates
@@ -107,7 +107,7 @@ Phase lengths will be fixed once the course milestones are known. Each week foll
 
 ## Getting started
 
-Requirements: Java 21, Maven 3.9+, Docker with Compose.
+Requirements: Java 21, Maven 3.9+, PostgreSQL 14+ on `localhost:5432`. Docker with Compose is needed only to run Kafka.
 
 1. Install the shared POMs. Services inherit from `platform/java`, which is not published to any repository:
 
@@ -116,20 +116,33 @@ Requirements: Java 21, Maven 3.9+, Docker with Compose.
    mvn -f platform/java/java-parent/pom.xml install
    ```
 
-2. Start Kafka, ZooKeeper and Schema Registry:
+2. Create one database and role per service (run once, see [`infrastructure/postgres/`](infrastructure/postgres/README.md)):
 
    ```bash
-   docker compose -f infrastructure/kafka/docker-compose.yml up -d
+   psql -d postgres -f infrastructure/postgres/create-service-databases.sql
    ```
 
-3. Build a service:
+3. Generate the JWT key pair for auth-service (run once per machine; both files stay out of Git):
+
+   ```bash
+   cd services/auth-service/src/main/resources/keys
+   openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+   openssl rsa -pubout -in private.pem -out public.pem
+   cd -
+   ```
+
+4. Run a service with the `local` profile:
 
    ```bash
    cd services/auth-service
-   ./mvnw compile
+   SPRING_PROFILES_ACTIVE=local OAUTH_JWK_SET_URI=http://localhost:8082/oauth2/jwks ./mvnw spring-boot:run
    ```
 
-Running services end to end also needs PostgreSQL on `localhost:5432` (not yet in the Compose file), a JWT key pair (see `services/auth-service/src/main/resources/keys/`) and the variables listed in each service's `.env.example`. A one-command local setup is planned for Phase 1.
+Services start without Kafka, but events are not delivered. To run it:
+
+```bash
+docker compose -f infrastructure/kafka/docker-compose.yml up -d
+```
 
 ## Documentation
 

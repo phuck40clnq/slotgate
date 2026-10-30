@@ -18,6 +18,7 @@ node_modules/
 !.env.example
 *.key
 private.pem
+public.pem
 
 # Runtime
 logs/
