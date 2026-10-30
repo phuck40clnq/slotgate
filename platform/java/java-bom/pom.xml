@@ -12,6 +12,11 @@
     <packaging>pom</packaging>
     <name>Java Bom</name>
 
+    <!-- Read by java-parent to pin spring-boot-maven-plugin to the same release -->
+    <properties>
+        <spring-boot.version>3.4.2</spring-boot.version>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
 
@@ -19,7 +24,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>3.4.2</version>
+                <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

@@ -24,7 +24,7 @@ platform
 ├── README.md
 └── java
     ├── java-bom    # Centralized dependency versions
-    └── java-parent # Shared parent configuration
+    └── java-parent # Shared build configuration; inherits java-bom, services inherit java-parent
 ```
 
 Additional languages or tooling (e.g., Go, Python, CI, Docker) may be added over time.

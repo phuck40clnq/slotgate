@@ -18,19 +18,6 @@
         <version>1.0.0</version>
     </parent>
 
-    <!-- Import platform -->
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.example.platform.java</groupId>
-                <artifactId>java-bom</artifactId>
-                <version>1.0.0</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
 
         <!-- Web -->
@@ -97,17 +84,5 @@
         </dependency>
 
     </dependencies>
-
-    <build>
-        <plugins>
-
-            <!-- Spring Boot plugin -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-
-        </plugins>
-    </build>
 
 </project>
