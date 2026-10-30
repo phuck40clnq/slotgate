@@ -5,9 +5,9 @@ spring:
       auto-startup: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/${DB_NAME:myapp_db}
-    username: ${DB_USER:user}
-    password: ${DB_PASS:user}
+    url: jdbc:postgresql://localhost:5432/${DB_NAME:slotgate_auth}
+    username: ${DB_USER:slotgate_auth}
+    password: ${DB_PASS:slotgate_auth}
     driver-class-name: org.postgresql.Driver
 
   jpa:
