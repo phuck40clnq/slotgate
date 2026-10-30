@@ -5,6 +5,12 @@ spring:
 server:
   port: ${PORT:8999}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
 logging:
   level:
     root: INFO

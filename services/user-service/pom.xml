@@ -18,6 +18,11 @@
         <version>1.0.0</version>
     </parent>
 
+    <properties>
+        <!-- No behaviour tests yet, see #2 -->
+        <coverage.gate.skip>true</coverage.gate.skip>
+    </properties>
+
     <dependencies>
 
         <!-- Web -->

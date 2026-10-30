@@ -34,7 +34,7 @@ Rules for automated tests in every service. This file extends [coding.md](./codi
 |---|---|---|---|---|
 | Unit | Domain and application logic, no framework context, no I/O | `test` phase | `*Test` | JUnit 5, AssertJ |
 | Architecture | Layering and forbidden dependencies from [java.md](./java.md) | `test` phase | `ArchitectureTest` | ArchUnit |
-| Integration | One adapter against real infrastructure (database, Kafka, HTTP) | `verify` phase | `*IT` | Testcontainers, Spring test slices |
+| Integration | One adapter against real infrastructure (database, Kafka, HTTP) | `verify` phase | `*IT` | Embedded PostgreSQL (`embedded-postgres`), Spring test slices |
 | Contract | Avro compatibility and OpenAPI conformance | CI | - | Schema Registry, OpenAPI linter |
 | End-to-end | The running system through the gateway | CI | - | Docker Compose |
 | Failure scenario | One scenario from the PRD, reproduced on purpose | On demand | - | Load and fault tools, decided per ADR |
@@ -79,7 +79,7 @@ Rules for automated tests in every service. This file extends [coding.md](./codi
 
 - Mocks are allowed only for outbound ports (`*Port`) in application tests.
 - Domain objects, value objects and records MUST NOT be mocked; build real ones.
-- Libraries and infrastructure the project does not own MUST NOT be mocked; use Testcontainers instead.
+- Libraries and infrastructure the project does not own MUST NOT be mocked; run the real technology in the test instead.
 - Prefer simple hand-written fakes over mocking frameworks when a fake is shorter.
 
 ---
