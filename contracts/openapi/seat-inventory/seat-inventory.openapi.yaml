@@ -1,0 +1,139 @@
+openapi: 3.0.3
+info:
+  title: Seat Inventory API
+  version: 1.0.0
+  description: Sections and their seats. Reachable through the gateway only.
+
+paths:
+  /api/v1/seat-inventory/sections:
+    post:
+      operationId: openSection
+      summary: Open a section with a fixed number of seats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenSectionRequest"
+      responses:
+        "201":
+          description: Section opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SectionResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/seat-inventory/sections/{sectionId}:
+    get:
+      operationId: getSection
+      summary: Read a section and the seats left
+      parameters:
+        - $ref: "#/components/parameters/SectionId"
+      responses:
+        "200":
+          description: Section found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SectionResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/seat-inventory/sections/{sectionId}/holds:
+    post:
+      operationId: reserveSeat
+      summary: Hold one seat in a section for the calling student
+      description: Holds never exceed the capacity of the section, including under concurrent requests.
+      parameters:
+        - $ref: "#/components/parameters/SectionId"
+        - name: X-Internal-User-Id
+          in: header
+          required: true
+          description: Student identity, set by the gateway
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: Seat held
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeatHoldResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+components:
+  parameters:
+    SectionId:
+      name: sectionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Error:
+      description: Error with a stable, machine-readable code
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+  schemas:
+    OpenSectionRequest:
+      type: object
+      required:
+        - capacity
+      properties:
+        capacity:
+          type: integer
+          format: int32
+          minimum: 1
+
+    SectionResponse:
+      type: object
+      required:
+        - sectionId
+        - capacity
+        - seatsLeft
+      properties:
+        sectionId:
+          type: string
+          format: uuid
+        capacity:
+          type: integer
+          format: int32
+        seatsLeft:
+          type: integer
+          format: int32
+
+    SeatHoldResponse:
+      type: object
+      required:
+        - holdId
+        - sectionId
+        - studentId
+        - heldAt
+      properties:
+        holdId:
+          type: string
+          format: uuid
+        sectionId:
+          type: string
+          format: uuid
+        studentId:
+          type: string
+          format: uuid
+        heldAt:
+          type: string
+          format: date-time

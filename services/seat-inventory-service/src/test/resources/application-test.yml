@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 32
+      connection-timeout: 60000
+
+logging:
+  level:
+    '[com.example]': WARN

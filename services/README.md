@@ -72,6 +72,7 @@ Examples:
 - [services/auth-service/README.md](./auth-service/README.md)
 - [services/gateway-service/README.md](./gateway-service/README.md)
 - [services/user-service/README.md](./user-service/README.md)
+- [services/seat-inventory-service/README.md](./seat-inventory-service/README.md)
 
 ---
 
