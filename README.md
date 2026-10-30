@@ -73,13 +73,14 @@ The code and documentation are bootstrapped from [LearnEventDrivenArchitecture](
 | [`gateway-service`](services/gateway-service/README.md) | Spring Cloud Gateway: routing, JWT verification via JWKS, identity propagation, unified error responses |
 | [`auth-service`](services/auth-service/README.md) | Registration, login, RS256 JWT issuance, JWKS endpoint; publishes `UserRegistered` and `UserLoggedIn` |
 | [`user-service`](services/user-service/README.md) | User profiles; consumes `UserRegistered` |
+| [`seat-inventory-service`](services/seat-inventory-service/README.md) | Sections and seats: holds that never exceed capacity, proven under concurrency |
 | `test-service` | Sandbox for routing, contract and event experiments |
 | [`contracts/`](contracts/README.md) | OpenAPI and Avro contracts, the source of truth between services |
 | [`platform/java/`](platform/README.md) | Shared Maven BOM and parent POM |
 | [`templates/`](templates/README.md) | Spring Boot service template |
 | [`frontend/web/`](frontend/web/README.md) | Vanilla JS client: login, registration, profile |
 
-Not in place yet: container images, seat inventory, waiting room, rate limiting (the gateway filter is an empty stub), idempotent consumers, retry and dead-letter handling, outbox, tracing across Kafka, load tests, and automated tests beyond context loading.
+Not in place yet: container images, seat hold expiry and confirmation, waiting room, rate limiting (the gateway filter is an empty stub), idempotent consumers, retry and dead-letter handling, outbox, tracing across Kafka, load tests, and automated tests in gateway, auth and user beyond context loading.
 
 ## Roadmap
 

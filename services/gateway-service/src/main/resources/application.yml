@@ -18,6 +18,13 @@ spring:
           filters:
             - RewritePath=/api/user/(?<segment>.*), /api/v1/user/${segment}
 
+        - id: seat-inventory-service
+          uri: lb://seat-inventory-service
+          predicates:
+            - Path=/api/seat-inventory/**
+          filters:
+            - RewritePath=/api/seat-inventory/(?<segment>.*), /api/v1/seat-inventory/${segment}
+
         # TODO: THIS IS FOR DEV AND TEST
         - id: test-service
           uri: lb://test-service

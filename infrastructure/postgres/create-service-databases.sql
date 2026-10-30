@@ -10,3 +10,7 @@ REVOKE ALL ON DATABASE slotgate_auth FROM PUBLIC;
 CREATE ROLE slotgate_user LOGIN PASSWORD 'slotgate_user';
 CREATE DATABASE slotgate_user OWNER slotgate_user;
 REVOKE ALL ON DATABASE slotgate_user FROM PUBLIC;
+
+CREATE ROLE slotgate_seat_inventory LOGIN PASSWORD 'slotgate_seat_inventory';
+CREATE DATABASE slotgate_seat_inventory OWNER slotgate_seat_inventory;
+REVOKE ALL ON DATABASE slotgate_seat_inventory FROM PUBLIC;

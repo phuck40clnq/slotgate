@@ -14,6 +14,7 @@ psql -d postgres -f infrastructure/postgres/create-service-databases.sql
 |---|---|---|---|
 | auth-service | `slotgate_auth` | `slotgate_auth` | `slotgate_auth` |
 | user-service | `slotgate_user` | `slotgate_user` | `slotgate_user` |
+| seat-inventory-service | `slotgate_seat_inventory` | `slotgate_seat_inventory` | `slotgate_seat_inventory` |
 
 These credentials are for local development and match the defaults in each service's `application-local.yml`.
 
@@ -30,7 +31,8 @@ This deletes all local data of these services:
 ```bash
 psql -d postgres \
   -c "DROP DATABASE slotgate_auth" -c "DROP ROLE slotgate_auth" \
-  -c "DROP DATABASE slotgate_user" -c "DROP ROLE slotgate_user"
+  -c "DROP DATABASE slotgate_user" -c "DROP ROLE slotgate_user" \
+  -c "DROP DATABASE slotgate_seat_inventory" -c "DROP ROLE slotgate_seat_inventory"
 ```
 
 Then run the set up command again.

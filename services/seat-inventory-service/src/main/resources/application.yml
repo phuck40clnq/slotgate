@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: ${SERVICE_NAME:seat-inventory-service}
+
+server:
+  port: ${PORT:8084}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
+logging:
+  level:
+    root: INFO
+    '[org.springframework]': INFO
+    '[com.example]': DEBUG

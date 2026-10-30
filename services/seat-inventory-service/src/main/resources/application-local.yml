@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${DB_NAME:slotgate_seat_inventory}
+    username: ${DB_USER:slotgate_seat_inventory}
+    password: ${DB_PASS:slotgate_seat_inventory}
