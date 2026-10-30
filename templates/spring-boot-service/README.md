@@ -11,6 +11,7 @@ Template for Java services: Java 21, Spring Boot 3, built on [platform/java](../
 - JSON logging through `logback-spring.xml` with the shared field names
 - Configuration from environment variables, listed in `.env.example`
 - Maven wrapper (`mvnw`), so the service builds without a local Maven
+- Test gates: `ArchitectureTest` for layering, `./mvnw verify` for `*IT` tests and the coverage floor
 
 ---
 
