@@ -2,10 +2,13 @@ package com.example.seatinventory.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
@@ -39,6 +42,22 @@ class ReserveSeatConcurrencyIT extends PostgresIntegrationTest {
         assertThat(outcome.rejected()).isEqualTo(callers - capacity);
         assertThat(seatHoldsOf(sectionId)).isEqualTo(capacity);
         assertThat(reservedSeatsOf(sectionId)).isEqualTo(capacity);
+    }
+
+    @ParameterizedTest(name = "{0} parallel requests from one student")
+    @ValueSource(ints = {2, 200})
+    void holdsOneSeatForParallelRequestsOfOneStudent(int requests) {
+        UUID sectionId = openSection.openSection(new OpenSectionCommand(10)).sectionId();
+        ReserveSeatCommand command = new ReserveSeatCommand(sectionId, new UUID(0, 1));
+        Set<UUID> holdIds = ConcurrentHashMap.newKeySet();
+
+        ParallelCallers.Outcome outcome = ParallelCallers.run(requests, callerIndex ->
+            holdIds.add(reserveSeat.reserveSeat(command).holdId()));
+
+        assertThat(outcome.accepted()).isEqualTo(requests);
+        assertThat(holdIds).hasSize(1);
+        assertThat(seatHoldsOf(sectionId)).isEqualTo(1);
+        assertThat(reservedSeatsOf(sectionId)).isEqualTo(1);
     }
 
     private int seatHoldsOf(UUID sectionId) {

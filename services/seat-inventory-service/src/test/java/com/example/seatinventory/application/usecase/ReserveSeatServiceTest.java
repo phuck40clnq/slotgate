@@ -27,7 +27,7 @@ class ReserveSeatServiceTest {
     private static final ReserveSeatCommand COMMAND = new ReserveSeatCommand(SECTION_ID, STUDENT_ID);
 
     private final InMemorySeatInventory seatInventory = new InMemorySeatInventory();
-    private final InMemorySeatHolds seatHolds = new InMemorySeatHolds();
+    private final InMemorySeatHolds seatHolds = new InMemorySeatHolds(seatInventory);
     private final ReserveSeatService service = new ReserveSeatService(
         seatInventory, seatHolds, () -> HOLD_ID, Clock.fixed(NOW, ZoneOffset.UTC));
 
@@ -37,7 +37,7 @@ class ReserveSeatServiceTest {
 
         SeatHoldResult result = service.reserveSeat(COMMAND);
 
-        assertThat(result).isEqualTo(new SeatHoldResult(HOLD_ID, SECTION_ID, STUDENT_ID, NOW));
+        assertThat(result).isEqualTo(new SeatHoldResult(HOLD_ID, SECTION_ID, STUDENT_ID, NOW, true));
         assertThat(seatHolds.all()).containsExactly(new SeatHold(HOLD_ID, SECTION_ID, STUDENT_ID, NOW));
     }
 
@@ -52,13 +52,45 @@ class ReserveSeatServiceTest {
     }
 
     @Test
+    void returnsTheExistingHoldWhenTheStudentAsksAgain() {
+        seatInventory.save(SectionFixtures.freeSection());
+        service.reserveSeat(COMMAND);
+
+        SeatHoldResult result = service.reserveSeat(COMMAND);
+
+        assertThat(result).isEqualTo(new SeatHoldResult(HOLD_ID, SECTION_ID, STUDENT_ID, NOW, false));
+    }
+
+    @Test
+    void takesNoSecondSeatWhenTheStudentAsksAgain() {
+        seatInventory.save(SectionFixtures.freeSection());
+        service.reserveSeat(COMMAND);
+
+        service.reserveSeat(COMMAND);
+
+        assertThat(seatHolds.all()).hasSize(1);
+        assertThat(seatInventory.findSection(SECTION_ID)).get()
+            .returns(39, section -> section.seatsLeft());
+    }
+
+    @Test
+    void returnsTheExistingHoldWhenTheStudentAsksAgainForTheLastSeat() {
+        seatInventory.save(SectionFixtures.sectionWithOneSeatLeft());
+        service.reserveSeat(COMMAND);
+
+        SeatHoldResult result = service.reserveSeat(COMMAND);
+
+        assertThat(result.isNewHold()).isFalse();
+        assertThat(result.holdId()).isEqualTo(HOLD_ID);
+    }
+
+    @Test
     void rejectsHoldWhenSectionIsFull() {
         seatInventory.save(SectionFixtures.fullSection());
 
         BusinessException rejection = catchThrowableOfType(BusinessException.class, () -> service.reserveSeat(COMMAND));
 
         assertThat(rejection.getErrorCode()).isEqualTo(SeatInventoryBusinessErrorCode.SECTION_FULL);
-        assertThat(seatHolds.all()).isEmpty();
     }
 
     @Test

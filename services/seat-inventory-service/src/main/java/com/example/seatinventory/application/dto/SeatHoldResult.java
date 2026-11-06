@@ -5,9 +5,13 @@ import java.util.UUID;
 
 import com.example.seatinventory.domain.model.SeatHold;
 
-public record SeatHoldResult(UUID holdId, UUID sectionId, UUID studentId, Instant heldAt) {
+public record SeatHoldResult(UUID holdId, UUID sectionId, UUID studentId, Instant heldAt, boolean isNewHold) {
 
-    public static SeatHoldResult from(SeatHold seatHold) {
-        return new SeatHoldResult(seatHold.id(), seatHold.sectionId(), seatHold.studentId(), seatHold.heldAt());
+    public static SeatHoldResult newHold(SeatHold seatHold) {
+        return new SeatHoldResult(seatHold.id(), seatHold.sectionId(), seatHold.studentId(), seatHold.heldAt(), true);
+    }
+
+    public static SeatHoldResult existingHold(SeatHold seatHold) {
+        return new SeatHoldResult(seatHold.id(), seatHold.sectionId(), seatHold.studentId(), seatHold.heldAt(), false);
     }
 }

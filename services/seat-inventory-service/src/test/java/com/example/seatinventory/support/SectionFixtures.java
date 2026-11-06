@@ -17,6 +17,10 @@ public final class SectionFixtures {
         return new Section(SECTION_ID, 40, 0);
     }
 
+    public static Section sectionWithOneSeatLeft() {
+        return new Section(SECTION_ID, 40, 39);
+    }
+
     public static Section fullSection() {
         return new Section(SECTION_ID, 40, 40);
     }

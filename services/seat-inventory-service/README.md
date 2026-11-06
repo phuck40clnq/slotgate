@@ -12,13 +12,17 @@ The contract is [seat-inventory.openapi.yaml](../../contracts/openapi/seat-inven
 |---|---|---|
 | `POST /api/v1/seat-inventory/sections` | Open a section with a capacity | `400 INVALID_REQUEST` |
 | `GET /api/v1/seat-inventory/sections/{sectionId}` | Read a section and the seats left | `404 SECTION_NOT_FOUND` |
-| `POST /api/v1/seat-inventory/sections/{sectionId}/holds` | Hold one seat for the student in `X-Internal-User-Id` | `404 SECTION_NOT_FOUND`, `409 SECTION_FULL` |
+| `POST /api/v1/seat-inventory/sections/{sectionId}/holds` | Hold one seat for the student in `X-Internal-User-Id`: `201` for a new hold, `200` with the existing hold when the student asks again | `404 SECTION_NOT_FOUND`, `409 SECTION_FULL` |
 
 Health and metrics are at `/actuator/health` and `/actuator/metrics`.
 
 ## How overselling is prevented
 
 A claim is one conditional `UPDATE`, in `SeatInventoryPersistenceAdapter`. The reasoning and the measurements are in [ADR-0005](../../docs/adr/0005-claim-seats-with-an-atomic-conditional-update.md).
+
+## How repeated requests are handled
+
+A student holds at most one seat per section. The hold is saved before the seat is claimed, and a unique `(section_id, student_id)` turns a double click or a retry into the existing hold instead of a second seat, in `SeatHoldPersistenceAdapter`. The reasoning and the measurements are in [ADR-0006](../../docs/adr/0006-make-seat-holds-idempotent-per-student-and-section.md).
 
 ## Run locally
 
@@ -45,6 +49,12 @@ To reproduce the oversell scenario with before and after numbers:
 ./mvnw verify -Dit.test=OversellScenario
 ```
 
+To reproduce the double click scenario:
+
+```bash
+./mvnw verify -Dit.test=DoubleClickScenario
+```
+
 ## Not built yet
 
-A hold has no expiry or confirmation, the same student can hold several seats, retries are not idempotent, and no event is published.
+A hold has no expiry or confirmation, and no event is published.
