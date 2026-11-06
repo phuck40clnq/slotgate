@@ -22,6 +22,7 @@ import com.example.seatinventory.support.PostgresIntegrationTest;
 class SectionApiIT extends PostgresIntegrationTest {
 
     private static final String SECTIONS = "/api/v1/seat-inventory/sections";
+    private static final UUID OTHER_STUDENT_ID = UUID.fromString("00000000-0000-0000-0000-00000000000d");
 
     @Autowired
     private TestRestTemplate rest;
@@ -39,7 +40,7 @@ class SectionApiIT extends PostgresIntegrationTest {
     void holdsSeatForTheCallingStudent() {
         UUID sectionId = openSection(1);
 
-        ResponseEntity<SeatHoldResponse> response = hold(sectionId, SeatHoldResponse.class);
+        ResponseEntity<SeatHoldResponse> response = hold(sectionId, STUDENT_ID, SeatHoldResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().sectionId()).isEqualTo(sectionId);
@@ -47,9 +48,20 @@ class SectionApiIT extends PostgresIntegrationTest {
     }
 
     @Test
+    void returnsTheSameHoldWhenTheStudentAsksAgainForTheLastSeat() {
+        UUID sectionId = openSection(1);
+        SeatHoldResponse firstHold = hold(sectionId, STUDENT_ID, SeatHoldResponse.class).getBody();
+
+        ResponseEntity<SeatHoldResponse> response = hold(sectionId, STUDENT_ID, SeatHoldResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(firstHold);
+    }
+
+    @Test
     void showsOneSeatLessAfterAHold() {
         UUID sectionId = openSection(2);
-        hold(sectionId, SeatHoldResponse.class);
+        hold(sectionId, STUDENT_ID, SeatHoldResponse.class);
 
         SectionResponse section = rest.getForObject(SECTIONS + "/" + sectionId, SectionResponse.class);
 
@@ -59,9 +71,9 @@ class SectionApiIT extends PostgresIntegrationTest {
     @Test
     void refusesHoldWhenSectionIsFull() {
         UUID sectionId = openSection(1);
-        hold(sectionId, SeatHoldResponse.class);
+        hold(sectionId, STUDENT_ID, SeatHoldResponse.class);
 
-        ResponseEntity<ErrorResponse> response = hold(sectionId, ErrorResponse.class);
+        ResponseEntity<ErrorResponse> response = hold(sectionId, OTHER_STUDENT_ID, ErrorResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody().code()).isEqualTo("SECTION_FULL");
@@ -69,7 +81,7 @@ class SectionApiIT extends PostgresIntegrationTest {
 
     @Test
     void refusesHoldOnUnknownSection() {
-        ResponseEntity<ErrorResponse> response = hold(UUID.randomUUID(), ErrorResponse.class);
+        ResponseEntity<ErrorResponse> response = hold(UUID.randomUUID(), STUDENT_ID, ErrorResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody().code()).isEqualTo("SECTION_NOT_FOUND");
@@ -112,7 +124,7 @@ class SectionApiIT extends PostgresIntegrationTest {
 
     @Test
     void carriesTheRequestIdInTheErrorResponse() {
-        ResponseEntity<ErrorResponse> response = hold(UUID.randomUUID(), ErrorResponse.class);
+        ResponseEntity<ErrorResponse> response = hold(UUID.randomUUID(), STUDENT_ID, ErrorResponse.class);
 
         assertThat(response.getBody().traceId())
             .isNotBlank()
@@ -127,9 +139,9 @@ class SectionApiIT extends PostgresIntegrationTest {
         return rest.postForEntity(SECTIONS, Map.of("capacity", capacity), responseType);
     }
 
-    private <T> ResponseEntity<T> hold(UUID sectionId, Class<T> responseType) {
+    private <T> ResponseEntity<T> hold(UUID sectionId, UUID studentId, Class<T> responseType) {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Internal-User-Id", STUDENT_ID.toString());
+        headers.set("X-Internal-User-Id", studentId.toString());
         return rest.postForEntity(SECTIONS + "/" + sectionId + "/holds", new HttpEntity<>(headers), responseType);
     }
 }

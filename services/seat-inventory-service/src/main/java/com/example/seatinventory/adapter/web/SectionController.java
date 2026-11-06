@@ -3,6 +3,7 @@ package com.example.seatinventory.adapter.web;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import com.example.seatinventory.adapter.web.dto.SeatHoldResponse;
 import com.example.seatinventory.adapter.web.dto.SectionResponse;
 import com.example.seatinventory.application.dto.OpenSectionCommand;
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
+import com.example.seatinventory.application.dto.SeatHoldResult;
 import com.example.seatinventory.application.port.in.GetSectionUseCase;
 import com.example.seatinventory.application.port.in.OpenSectionUseCase;
 import com.example.seatinventory.application.port.in.ReserveSeatUseCase;
@@ -45,11 +47,12 @@ public class SectionController {
     }
 
     @PostMapping("/{sectionId}/holds")
-    @ResponseStatus(HttpStatus.CREATED)
-    public SeatHoldResponse reserveSeat(
+    public ResponseEntity<SeatHoldResponse> reserveSeat(
         @PathVariable UUID sectionId,
         @RequestHeader("X-Internal-User-Id") UUID studentId
     ) {
-        return SeatHoldResponse.from(reserveSeatUseCase.reserveSeat(new ReserveSeatCommand(sectionId, studentId)));
+        SeatHoldResult result = reserveSeatUseCase.reserveSeat(new ReserveSeatCommand(sectionId, studentId));
+        HttpStatus status = result.isNewHold() ? HttpStatus.CREATED : HttpStatus.OK;
+        return ResponseEntity.status(status).body(SeatHoldResponse.from(result));
     }
 }
