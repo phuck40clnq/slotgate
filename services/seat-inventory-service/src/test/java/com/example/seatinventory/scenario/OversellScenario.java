@@ -17,6 +17,7 @@ import com.example.seatinventory.application.port.out.IdGeneratorPort;
 import com.example.seatinventory.application.port.out.SeatHoldRepositoryPort;
 import com.example.seatinventory.application.port.out.SeatInventoryPort;
 import com.example.seatinventory.application.usecase.ReserveSeatService;
+import com.example.seatinventory.domain.model.HoldPeriod;
 import com.example.seatinventory.support.ParallelCallers;
 import com.example.seatinventory.support.PostgresIntegrationTest;
 
@@ -45,6 +46,9 @@ class OversellScenario extends PostgresIntegrationTest {
     private Clock clock;
 
     @Autowired
+    private HoldPeriod holdPeriod;
+
+    @Autowired
     private JdbcClient jdbcClient;
 
     @Autowired
@@ -66,7 +70,8 @@ class OversellScenario extends PostgresIntegrationTest {
     }
 
     private int runAgainst(String label, SeatInventoryPort seatInventory) {
-        ReserveSeatService reserveSeat = new ReserveSeatService(seatInventory, seatHolds, idGenerator, clock);
+        ReserveSeatService reserveSeat =
+            new ReserveSeatService(seatInventory, seatHolds, idGenerator, clock, holdPeriod);
         UUID sectionId = openSection.openSection(new OpenSectionCommand(SEATS)).sectionId();
 
         ParallelCallers.Outcome outcome = ParallelCallers.run(CALLERS, callerIndex ->

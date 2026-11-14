@@ -5,6 +5,9 @@ spring:
 server:
   port: ${PORT:8084}
 
+seat-hold:
+  ttl: ${SEAT_HOLD_TTL:PT5M}
+
 management:
   endpoints:
     web:

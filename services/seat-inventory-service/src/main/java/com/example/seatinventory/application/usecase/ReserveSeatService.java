@@ -1,6 +1,7 @@
 package com.example.seatinventory.application.usecase;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -14,8 +15,10 @@ import com.example.seatinventory.application.port.out.SeatHoldRepositoryPort;
 import com.example.seatinventory.application.port.out.SeatInventoryPort;
 import com.example.seatinventory.common.error.SeatInventoryBusinessErrorCode;
 import com.example.seatinventory.common.exception.BusinessException;
+import com.example.seatinventory.domain.model.HoldPeriod;
 import com.example.seatinventory.domain.model.SeatClaim;
 import com.example.seatinventory.domain.model.SeatHold;
+import com.example.seatinventory.domain.model.SeatHoldStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +30,7 @@ public class ReserveSeatService implements ReserveSeatUseCase {
     private final SeatHoldRepositoryPort seatHolds;
     private final IdGeneratorPort idGenerator;
     private final Clock clock;
+    private final HoldPeriod holdPeriod;
 
     /**
      * The hold is saved before the seat is claimed, so that a repeated request finds the existing hold even
@@ -35,8 +39,9 @@ public class ReserveSeatService implements ReserveSeatUseCase {
     @Override
     @Transactional
     public SeatHoldResult reserveSeat(ReserveSeatCommand command) {
-        SeatHold newHold = new SeatHold(
-            idGenerator.nextId(), command.sectionId(), command.studentId(), clock.instant());
+        Instant now = clock.instant();
+        SeatHold newHold = new SeatHold(idGenerator.nextId(), command.sectionId(), command.studentId(),
+            now, holdPeriod.expiryFor(now), SeatHoldStatus.HELD);
         if (!seatHolds.saveIfAbsent(newHold)) {
             return existingHold(command);
         }
@@ -44,7 +49,7 @@ public class ReserveSeatService implements ReserveSeatUseCase {
     }
 
     private SeatHoldResult existingHold(ReserveSeatCommand command) {
-        return seatHolds.findHold(command.sectionId(), command.studentId())
+        return seatHolds.findActiveHold(command.sectionId(), command.studentId())
             .map(SeatHoldResult::existingHold)
             .orElseThrow(() -> rejected(SeatInventoryBusinessErrorCode.SECTION_NOT_FOUND, command));
     }

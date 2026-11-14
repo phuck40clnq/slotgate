@@ -4,8 +4,8 @@ import com.example.seatinventory.application.dto.ReserveSeatCommand;
 import com.example.seatinventory.application.dto.SeatHoldResult;
 
 /**
- * Holds one seat of a section for a student. A student holds at most one seat per section, so repeating the
- * request returns the existing hold.
+ * Holds one seat of a section for a student until the hold period ends. A student has at most one held or
+ * confirmed seat per section, so repeating the request returns the existing hold.
  */
 public interface ReserveSeatUseCase {
 

@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.seatinventory.adapter.web.dto.OpenSectionRequest;
 import com.example.seatinventory.adapter.web.dto.SeatHoldResponse;
 import com.example.seatinventory.adapter.web.dto.SectionResponse;
+import com.example.seatinventory.application.dto.ConfirmSeatHoldCommand;
 import com.example.seatinventory.application.dto.OpenSectionCommand;
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
 import com.example.seatinventory.application.dto.SeatHoldResult;
+import com.example.seatinventory.application.port.in.ConfirmSeatHoldUseCase;
 import com.example.seatinventory.application.port.in.GetSectionUseCase;
 import com.example.seatinventory.application.port.in.OpenSectionUseCase;
 import com.example.seatinventory.application.port.in.ReserveSeatUseCase;
@@ -34,6 +36,7 @@ public class SectionController {
     private final OpenSectionUseCase openSectionUseCase;
     private final GetSectionUseCase getSectionUseCase;
     private final ReserveSeatUseCase reserveSeatUseCase;
+    private final ConfirmSeatHoldUseCase confirmSeatHoldUseCase;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -54,5 +57,15 @@ public class SectionController {
         SeatHoldResult result = reserveSeatUseCase.reserveSeat(new ReserveSeatCommand(sectionId, studentId));
         HttpStatus status = result.isNewHold() ? HttpStatus.CREATED : HttpStatus.OK;
         return ResponseEntity.status(status).body(SeatHoldResponse.from(result));
+    }
+
+    @PostMapping("/{sectionId}/holds/{holdId}/confirmation")
+    public SeatHoldResponse confirmSeatHold(
+        @PathVariable UUID sectionId,
+        @PathVariable UUID holdId,
+        @RequestHeader("X-Internal-User-Id") UUID studentId
+    ) {
+        return SeatHoldResponse.from(
+            confirmSeatHoldUseCase.confirmSeatHold(new ConfirmSeatHoldCommand(sectionId, holdId, studentId)));
     }
 }

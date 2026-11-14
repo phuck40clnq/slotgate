@@ -3,6 +3,7 @@ package com.example.seatinventory.adapter.web;
 import static com.example.seatinventory.support.SectionFixtures.STUDENT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 import com.example.seatinventory.adapter.web.dto.SeatHoldResponse;
 import com.example.seatinventory.adapter.web.dto.SectionResponse;
@@ -27,6 +29,9 @@ class SectionApiIT extends PostgresIntegrationTest {
     @Autowired
     private TestRestTemplate rest;
 
+    @Autowired
+    private JdbcClient jdbcClient;
+
     @Test
     void opensSectionWithEverySeatLeft() {
         ResponseEntity<SectionResponse> response = open(40, SectionResponse.class);
@@ -37,7 +42,7 @@ class SectionApiIT extends PostgresIntegrationTest {
     }
 
     @Test
-    void holdsSeatForTheCallingStudent() {
+    void holdsSeatForTheCallingStudentForTheDefaultHoldPeriod() {
         UUID sectionId = openSection(1);
 
         ResponseEntity<SeatHoldResponse> response = hold(sectionId, STUDENT_ID, SeatHoldResponse.class);
@@ -45,6 +50,8 @@ class SectionApiIT extends PostgresIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().sectionId()).isEqualTo(sectionId);
         assertThat(response.getBody().studentId()).isEqualTo(STUDENT_ID);
+        assertThat(response.getBody().status()).isEqualTo("HELD");
+        assertThat(response.getBody().expiresAt()).isEqualTo(response.getBody().heldAt().plus(Duration.ofMinutes(5)));
     }
 
     @Test
@@ -85,6 +92,53 @@ class SectionApiIT extends PostgresIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody().code()).isEqualTo("SECTION_NOT_FOUND");
+    }
+
+    @Test
+    void confirmsTheHoldOfTheCallingStudent() {
+        UUID sectionId = openSection(1);
+        SeatHoldResponse heldSeat = hold(sectionId, STUDENT_ID, SeatHoldResponse.class).getBody();
+
+        ResponseEntity<SeatHoldResponse> response = confirm(heldSeat, STUDENT_ID, SeatHoldResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().holdId()).isEqualTo(heldSeat.holdId());
+        assertThat(response.getBody().status()).isEqualTo("CONFIRMED");
+    }
+
+    @Test
+    void returnsTheSameConfirmedHoldWhenConfirmedAgain() {
+        UUID sectionId = openSection(1);
+        SeatHoldResponse heldSeat = hold(sectionId, STUDENT_ID, SeatHoldResponse.class).getBody();
+        SeatHoldResponse firstConfirmation = confirm(heldSeat, STUDENT_ID, SeatHoldResponse.class).getBody();
+
+        ResponseEntity<SeatHoldResponse> response = confirm(heldSeat, STUDENT_ID, SeatHoldResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(firstConfirmation);
+    }
+
+    @Test
+    void refusesToConfirmAHoldWhoseTimeIsUp() {
+        UUID sectionId = openSection(1);
+        SeatHoldResponse heldSeat = hold(sectionId, STUDENT_ID, SeatHoldResponse.class).getBody();
+        endHoldPeriod(heldSeat.holdId());
+
+        ResponseEntity<ErrorResponse> response = confirm(heldSeat, STUDENT_ID, ErrorResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().code()).isEqualTo("HOLD_EXPIRED");
+    }
+
+    @Test
+    void refusesToConfirmTheHoldOfAnotherStudent() {
+        UUID sectionId = openSection(1);
+        SeatHoldResponse heldSeat = hold(sectionId, STUDENT_ID, SeatHoldResponse.class).getBody();
+
+        ResponseEntity<ErrorResponse> response = confirm(heldSeat, OTHER_STUDENT_ID, ErrorResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().code()).isEqualTo("HOLD_NOT_FOUND");
     }
 
     @Test
@@ -140,8 +194,24 @@ class SectionApiIT extends PostgresIntegrationTest {
     }
 
     private <T> ResponseEntity<T> hold(UUID sectionId, UUID studentId, Class<T> responseType) {
+        return rest.postForEntity(
+            SECTIONS + "/" + sectionId + "/holds", new HttpEntity<>(identityOf(studentId)), responseType);
+    }
+
+    private <T> ResponseEntity<T> confirm(SeatHoldResponse heldSeat, UUID studentId, Class<T> responseType) {
+        String confirmation = SECTIONS + "/" + heldSeat.sectionId() + "/holds/" + heldSeat.holdId() + "/confirmation";
+        return rest.postForEntity(confirmation, new HttpEntity<>(identityOf(studentId)), responseType);
+    }
+
+    private HttpHeaders identityOf(UUID studentId) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-Internal-User-Id", studentId.toString());
-        return rest.postForEntity(SECTIONS + "/" + sectionId + "/holds", new HttpEntity<>(headers), responseType);
+        return headers;
+    }
+
+    private void endHoldPeriod(UUID holdId) {
+        jdbcClient.sql("UPDATE seat_hold SET expires_at = held_at WHERE id = :id")
+            .param("id", holdId)
+            .update();
     }
 }
