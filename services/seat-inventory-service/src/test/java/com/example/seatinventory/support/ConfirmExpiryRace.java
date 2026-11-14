@@ -1,5 +1,7 @@
 package com.example.seatinventory.support;
 
+import static org.awaitility.Awaitility.await;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -29,7 +31,9 @@ import com.example.seatinventory.domain.model.HoldPeriod;
 
 /**
  * Lets one sweep race the confirmations of every hold in a section. Every hold qualifies for both: the
- * confirmations run one second before the hold period ends, the sweep one second after.
+ * confirmations run one second before the hold period ends, the sweep one second after. The sweep starts once
+ * half of the confirmations have returned, so that the other half are in flight while it runs; started with
+ * the others, a single fast sweep either beat every confirmation or came after all of them.
  */
 public abstract class ConfirmExpiryRace extends PostgresIntegrationTest {
 
@@ -81,6 +85,8 @@ public abstract class ConfirmExpiryRace extends PostgresIntegrationTest {
 
         ParallelCallers.run(holds + 1, callerIndex -> {
             if (callerIndex == holds) {
+                await().atMost(Duration.ofSeconds(30))
+                    .until(() -> confirmedByCallers.get() + expiredByCallers.get() >= holds / 2);
                 transaction.executeWithoutResult(status -> expireSeatHolds.expireHoldsIn(sectionId));
                 return;
             }
