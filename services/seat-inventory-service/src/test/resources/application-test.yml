@@ -4,6 +4,9 @@ spring:
       maximum-pool-size: 32
       connection-timeout: 60000
 
+seat-hold:
+  sweep-enabled: false
+
 logging:
   level:
     '[com.example]': WARN

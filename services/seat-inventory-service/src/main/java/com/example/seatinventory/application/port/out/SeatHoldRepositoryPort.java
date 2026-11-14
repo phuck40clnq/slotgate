@@ -1,6 +1,7 @@
 package com.example.seatinventory.application.port.out;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,4 +31,14 @@ public interface SeatHoldRepositoryPort {
      * @return whether this call confirmed the hold
      */
     boolean confirm(UUID holdId, Instant now);
+
+    List<UUID> findSectionsWithExpiredHolds(Instant now);
+
+    /**
+     * Expires the holds of a section that are still held and whose hold period ended at {@code now}. Atomic
+     * per hold against {@link #confirm}: a hold is either confirmed or expired, never both.
+     *
+     * @return how many holds this call expired
+     */
+    int expireHolds(UUID sectionId, Instant now);
 }

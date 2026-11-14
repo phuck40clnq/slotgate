@@ -35,4 +35,10 @@ public class InMemorySeatInventory implements SeatInventoryPort {
         save(new Section(section.id(), section.capacity(), section.reservedSeats() + 1));
         return new SeatClaim.Claimed();
     }
+
+    @Override
+    public void releaseSeats(UUID sectionId, int seats) {
+        Section section = sections.get(sectionId);
+        save(new Section(section.id(), section.capacity(), section.reservedSeats() - seats));
+    }
 }

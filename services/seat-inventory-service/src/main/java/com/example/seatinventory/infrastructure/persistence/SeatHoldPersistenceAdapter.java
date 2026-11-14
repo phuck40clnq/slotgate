@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -87,6 +88,38 @@ public class SeatHoldPersistenceAdapter implements SeatHoldRepositoryPort {
             .param("now", toTimestamp(now))
             .update();
         return confirmedRows == 1;
+    }
+
+    /**
+     * Reads every held hold, since no index covers expires_at yet: the cost of this scan under load is what
+     * ADR-0007 still has to measure.
+     */
+    @Override
+    public List<UUID> findSectionsWithExpiredHolds(Instant now) {
+        return jdbcClient.sql("""
+                SELECT DISTINCT section_id
+                FROM seat_hold
+                WHERE status = 'HELD' AND expires_at <= :now
+                """)
+            .param("now", toTimestamp(now))
+            .query(UUID.class)
+            .list();
+    }
+
+    /**
+     * Same primitive as {@link #confirm}: only rows still HELD change, and a row confirmed meanwhile is
+     * re-evaluated after its lock is released and skipped. See ADR-0007.
+     */
+    @Override
+    public int expireHolds(UUID sectionId, Instant now) {
+        return jdbcClient.sql("""
+                UPDATE seat_hold
+                SET status = 'EXPIRED'
+                WHERE section_id = :sectionId AND status = 'HELD' AND expires_at <= :now
+                """)
+            .param("sectionId", sectionId)
+            .param("now", toTimestamp(now))
+            .update();
     }
 
     private static OffsetDateTime toTimestamp(Instant instant) {

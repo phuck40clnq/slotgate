@@ -136,6 +136,45 @@ class SeatHoldPersistenceAdapterIT extends PostgresIntegrationTest {
         assertThat(isConfirmed).isFalse();
     }
 
+    @Test
+    void expiresOnlyHeldHoldsWhoseTimeIsUp() {
+        UUID sectionId = openSection();
+        SeatHold timeIsUp = holdOf(sectionId, EXPIRES_AT);
+        SeatHold stillRunning = holdOf(sectionId, EXPIRES_AT.plusSeconds(1));
+        SeatHold confirmed = holdOf(sectionId, EXPIRES_AT);
+        seatHolds.saveIfAbsent(timeIsUp);
+        seatHolds.saveIfAbsent(stillRunning);
+        seatHolds.saveIfAbsent(confirmed);
+        seatHolds.confirm(confirmed.id(), HELD_AT);
+
+        int expiredHolds = seatHolds.expireHolds(sectionId, EXPIRES_AT);
+
+        assertThat(expiredHolds).isEqualTo(1);
+        assertThat(statusOf(timeIsUp)).isEqualTo(SeatHoldStatus.EXPIRED);
+        assertThat(statusOf(stillRunning)).isEqualTo(SeatHoldStatus.HELD);
+        assertThat(statusOf(confirmed)).isEqualTo(SeatHoldStatus.CONFIRMED);
+    }
+
+    @Test
+    void findsSectionsWithExpiredHolds() {
+        UUID sectionWithExpiredHold = openSection();
+        UUID sectionWithRunningHold = openSection();
+        seatHolds.saveIfAbsent(holdOf(sectionWithExpiredHold, EXPIRES_AT));
+        seatHolds.saveIfAbsent(holdOf(sectionWithRunningHold, EXPIRES_AT.plusSeconds(1)));
+
+        assertThat(seatHolds.findSectionsWithExpiredHolds(EXPIRES_AT))
+            .contains(sectionWithExpiredHold)
+            .doesNotContain(sectionWithRunningHold);
+    }
+
+    private SeatHold holdOf(UUID sectionId, Instant expiresAt) {
+        return new SeatHold(UUID.randomUUID(), sectionId, UUID.randomUUID(), HELD_AT, expiresAt, SeatHoldStatus.HELD);
+    }
+
+    private SeatHoldStatus statusOf(SeatHold seatHold) {
+        return seatHolds.findHold(seatHold.id()).orElseThrow().status();
+    }
+
     private UUID openSection() {
         Section section = Section.open(UUID.randomUUID(), 10);
         seatInventory.save(section);

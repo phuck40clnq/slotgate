@@ -120,6 +120,28 @@ class ReserveSeatServiceTest {
     }
 
     @Test
+    void holdsAgainWhenTheActiveHoldExpiresWhileTheStudentAsks() {
+        seatInventory.save(SectionFixtures.freeSection());
+        InMemorySeatHolds sweptSeatHolds = new InMemorySeatHolds(seatInventory) {
+            @Override
+            public boolean saveIfAbsent(SeatHold seatHold) {
+                boolean isSaved = super.saveIfAbsent(seatHold);
+                expireHolds(SECTION_ID, NOW);
+                return isSaved;
+            }
+        };
+        sweptSeatHolds.add(earlierHold(SeatHoldStatus.HELD));
+        ReserveSeatService sweptService = new ReserveSeatService(
+            seatInventory, sweptSeatHolds, () -> HOLD_ID, Clock.fixed(NOW, ZoneOffset.UTC),
+            new HoldPeriod(Duration.ofMinutes(5)));
+
+        SeatHoldResult result = sweptService.reserveSeat(COMMAND);
+
+        assertThat(result.isNewHold()).isTrue();
+        assertThat(result.holdId()).isEqualTo(HOLD_ID);
+    }
+
+    @Test
     void rejectsHoldWhenSectionIsFull() {
         seatInventory.save(SectionFixtures.fullSection());
 

@@ -3,6 +3,7 @@ package com.example.seatinventory.application.usecase;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,19 +40,24 @@ public class ReserveSeatService implements ReserveSeatUseCase {
     @Override
     @Transactional
     public SeatHoldResult reserveSeat(ReserveSeatCommand command) {
+        return holdSeat(command)
+            .or(() -> holdSeat(command))
+            .orElseThrow(() -> rejected(SeatInventoryBusinessErrorCode.SECTION_NOT_FOUND, command));
+    }
+
+    /**
+     * Empty when the save was skipped but no active hold is left to return: either the section does not exist,
+     * or the hold that made the save skip expired before it was read. A second attempt tells the two apart,
+     * because only the expired case saves a new hold. See ADR-0007.
+     */
+    private Optional<SeatHoldResult> holdSeat(ReserveSeatCommand command) {
         Instant now = clock.instant();
         SeatHold newHold = new SeatHold(idGenerator.nextId(), command.sectionId(), command.studentId(),
             now, holdPeriod.expiryFor(now), SeatHoldStatus.HELD);
-        if (!seatHolds.saveIfAbsent(newHold)) {
-            return existingHold(command);
+        if (seatHolds.saveIfAbsent(newHold)) {
+            return Optional.of(claimSeatFor(newHold, command));
         }
-        return claimSeatFor(newHold, command);
-    }
-
-    private SeatHoldResult existingHold(ReserveSeatCommand command) {
-        return seatHolds.findActiveHold(command.sectionId(), command.studentId())
-            .map(SeatHoldResult::existingHold)
-            .orElseThrow(() -> rejected(SeatInventoryBusinessErrorCode.SECTION_NOT_FOUND, command));
+        return seatHolds.findActiveHold(command.sectionId(), command.studentId()).map(SeatHoldResult::existingHold);
     }
 
     private SeatHoldResult claimSeatFor(SeatHold newHold, ReserveSeatCommand command) {

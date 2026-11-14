@@ -7,6 +7,8 @@ server:
 
 seat-hold:
   ttl: ${SEAT_HOLD_TTL:PT5M}
+  sweep-interval: ${SEAT_HOLD_SWEEP_INTERVAL:PT5S}
+  sweep-enabled: ${SEAT_HOLD_SWEEP_ENABLED:true}
 
 management:
   endpoints:

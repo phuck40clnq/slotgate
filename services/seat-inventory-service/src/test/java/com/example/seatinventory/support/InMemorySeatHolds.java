@@ -57,11 +57,36 @@ public class InMemorySeatHolds implements SeatHoldRepositoryPort {
         return true;
     }
 
+    @Override
+    public List<UUID> findSectionsWithExpiredHolds(Instant now) {
+        return seatHolds.values().stream()
+            .filter(seatHold -> isExpiredAt(seatHold, now))
+            .map(SeatHold::sectionId)
+            .distinct()
+            .toList();
+    }
+
+    @Override
+    public int expireHolds(UUID sectionId, Instant now) {
+        List<SeatHold> expiredHolds = seatHolds.values().stream()
+            .filter(seatHold -> seatHold.sectionId().equals(sectionId) && isExpiredAt(seatHold, now))
+            .toList();
+        for (SeatHold seatHold : expiredHolds) {
+            seatHolds.put(seatHold.id(), new SeatHold(seatHold.id(), seatHold.sectionId(), seatHold.studentId(),
+                seatHold.heldAt(), seatHold.expiresAt(), SeatHoldStatus.EXPIRED));
+        }
+        return expiredHolds.size();
+    }
+
     public void add(SeatHold seatHold) {
         seatHolds.put(seatHold.id(), seatHold);
     }
 
     public List<SeatHold> all() {
         return List.copyOf(seatHolds.values());
+    }
+
+    private static boolean isExpiredAt(SeatHold seatHold, Instant now) {
+        return seatHold.status() == SeatHoldStatus.HELD && !seatHold.expiresAt().isAfter(now);
     }
 }

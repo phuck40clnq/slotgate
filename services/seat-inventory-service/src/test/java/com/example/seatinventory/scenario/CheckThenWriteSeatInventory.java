@@ -45,4 +45,9 @@ class CheckThenWriteSeatInventory implements SeatInventoryPort {
             .update();
         return new SeatClaim.Claimed();
     }
+
+    @Override
+    public void releaseSeats(UUID sectionId, int seats) {
+        seatInventory.releaseSeats(sectionId, seats);
+    }
 }
