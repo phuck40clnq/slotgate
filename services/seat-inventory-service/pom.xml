@@ -85,6 +85,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Awaits asynchronous outcomes such as the expiry sweep; the testing standard forbids Thread.sleep -->
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

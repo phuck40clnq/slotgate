@@ -19,4 +19,9 @@ public interface SeatInventoryPort {
      * Claims one seat of a section. Atomic: concurrent callers never claim more seats than the capacity.
      */
     SeatClaim claimSeat(UUID sectionId);
+
+    /**
+     * Gives seats back to a section. The database refuses to reserve fewer than zero seats.
+     */
+    void releaseSeats(UUID sectionId, int seats);
 }

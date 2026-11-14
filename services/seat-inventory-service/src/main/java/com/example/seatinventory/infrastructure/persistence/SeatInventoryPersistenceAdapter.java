@@ -57,6 +57,14 @@ public class SeatInventoryPersistenceAdapter implements SeatInventoryPort {
         return findSection(sectionId).isPresent() ? new SeatClaim.SectionFull() : new SeatClaim.SectionNotFound();
     }
 
+    @Override
+    public void releaseSeats(UUID sectionId, int seats) {
+        jdbcClient.sql("UPDATE section SET reserved_seats = reserved_seats - :seats WHERE id = :id")
+            .param("id", sectionId)
+            .param("seats", seats)
+            .update();
+    }
+
     private Section toSection(ResultSet row) throws SQLException {
         return new Section(
             row.getObject("id", UUID.class),

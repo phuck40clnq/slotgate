@@ -60,6 +60,23 @@ class SeatInventoryPersistenceAdapterIT extends PostgresIntegrationTest {
             .update());
     }
 
+    @Test
+    void givesSeatsBack() {
+        Section section = openSection(10, 7);
+
+        seatInventory.releaseSeats(section.id(), 3);
+
+        assertThat(seatInventory.findSection(section.id())).contains(new Section(section.id(), 10, 4));
+    }
+
+    @Test
+    void databaseRefusesToGiveBackMoreSeatsThanReserved() {
+        Section section = openSection(10, 2);
+
+        assertThatExceptionOfType(DataIntegrityViolationException.class)
+            .isThrownBy(() -> seatInventory.releaseSeats(section.id(), 3));
+    }
+
     private Section openSection(int capacity, int reservedSeats) {
         Section section = new Section(UUID.randomUUID(), capacity, reservedSeats);
         seatInventory.save(section);

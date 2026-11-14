@@ -12,7 +12,8 @@ The contract is [seat-inventory.openapi.yaml](../../contracts/openapi/seat-inven
 |---|---|---|
 | `POST /api/v1/seat-inventory/sections` | Open a section with a capacity | `400 INVALID_REQUEST` |
 | `GET /api/v1/seat-inventory/sections/{sectionId}` | Read a section and the seats left | `404 SECTION_NOT_FOUND` |
-| `POST /api/v1/seat-inventory/sections/{sectionId}/holds` | Hold one seat for the student in `X-Internal-User-Id`: `201` for a new hold, `200` with the existing hold when the student asks again | `404 SECTION_NOT_FOUND`, `409 SECTION_FULL` |
+| `POST /api/v1/seat-inventory/sections/{sectionId}/holds` | Hold one seat for the student in `X-Internal-User-Id` until `expiresAt`: `201` for a new hold, `200` with the existing hold when the student asks again | `404 SECTION_NOT_FOUND`, `409 SECTION_FULL` |
+| `POST /api/v1/seat-inventory/sections/{sectionId}/holds/{holdId}/confirmation` | Confirm the student's hold before it expires, so the seat stays theirs: `200`, also when confirmed again | `404 HOLD_NOT_FOUND`, `409 HOLD_EXPIRED` |
 
 Health and metrics are at `/actuator/health` and `/actuator/metrics`.
 
@@ -22,7 +23,11 @@ A claim is one conditional `UPDATE`, in `SeatInventoryPersistenceAdapter`. The r
 
 ## How repeated requests are handled
 
-A student holds at most one seat per section. The hold is saved before the seat is claimed, and a unique `(section_id, student_id)` turns a double click or a retry into the existing hold instead of a second seat, in `SeatHoldPersistenceAdapter`. The reasoning and the measurements are in [ADR-0006](../../docs/adr/0006-make-seat-holds-idempotent-per-student-and-section.md).
+A student has at most one held or confirmed seat per section. The hold is saved before the seat is claimed, and a unique `(section_id, student_id)` over active holds turns a double click or a retry into the existing hold instead of a second seat, in `SeatHoldPersistenceAdapter`. The reasoning and the measurements are in [ADR-0006](../../docs/adr/0006-make-seat-holds-idempotent-per-student-and-section.md).
+
+## How holds end
+
+A hold lasts `SEAT_HOLD_TTL` (5 minutes by default). The student confirms it before then, or a sweep every `SEAT_HOLD_SWEEP_INTERVAL` (5 seconds by default) expires it and gives the seat back, one section per transaction. Confirmation and expiry are both conditional updates on `status = 'HELD'`, so a hold ends one way only. `SEAT_HOLD_SWEEP_ENABLED=false` stops an instance from sweeping. The reasoning and the measurements are in [ADR-0007](../../docs/adr/0007-expire-unconfirmed-seat-holds-with-a-periodic-sweep.md).
 
 ## Run locally
 
@@ -55,6 +60,13 @@ To reproduce the double click scenario:
 ./mvnw verify -Dit.test=DoubleClickScenario
 ```
 
+To reproduce the phantom hold scenario, with and without the sweep, and the race between a confirmation and an expiry:
+
+```bash
+./mvnw verify -Dit.test=PhantomHoldScenario
+./mvnw verify -Dit.test=ConfirmExpiryRaceScenario
+```
+
 ## Not built yet
 
-A hold has no expiry or confirmation, and no event is published.
+No event is published, so nothing outside this service learns that a hold was confirmed or expired.
