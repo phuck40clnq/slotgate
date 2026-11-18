@@ -30,6 +30,8 @@ A student has at most one held or confirmed seat per section. The hold is saved 
 
 A hold lasts `SEAT_HOLD_TTL` (5 minutes by default). The student confirms it before then, or a sweep every `SEAT_HOLD_SWEEP_INTERVAL` (5 seconds by default) expires it and gives the seat back, one section per transaction. Confirmation and expiry are both conditional updates on `status = 'HELD'`, so a hold ends one way only. `SEAT_HOLD_SWEEP_ENABLED=false` stops an instance from sweeping. The reasoning and the measurements are in [ADR-0007](../../docs/adr/0007-expire-unconfirmed-seat-holds-with-a-periodic-sweep.md).
 
+The sweep finds expired holds through a partial index on the expiry of held holds. Under load a sweep still takes seconds, because it shares the connection pool with requests, so a seat comes back several intervals after its hold expired. The measurements are in [ADR-0008](../../docs/adr/0008-index-held-holds-by-expiry-for-the-sweep.md).
+
 ## Run locally
 
 Follow [Getting started](../../README.md#getting-started) for the shared POMs and the database, then:
@@ -74,6 +76,12 @@ To reproduce the phantom hold scenario, with and without the sweep, and the race
 ```bash
 ./mvnw verify -Dit.test=PhantomHoldScenario
 ./mvnw verify -Dit.test=ConfirmExpiryRaceScenario
+```
+
+To measure the sweep under load, without and with the index on expiry (about two minutes; it empties the tables of its own embedded database):
+
+```bash
+./mvnw verify -Dit.test=SweepLoadScenario
 ```
 
 ## Not built yet

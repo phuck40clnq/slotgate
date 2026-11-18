@@ -16,11 +16,11 @@ The expiry sweep of [ADR-0007](./0007-expire-unconfirmed-seat-holds-with-a-perio
 | p99 of new holds: all / seconds with a sweep / other seconds | 194 / 191 / 205 ms | 145 / 144 / 150 ms |
 | New holds | 71,901 | 97,420 |
 
-A first run without warm-up gave the same picture: 274 ms against 4.7 ms for the sweep query, and a p99 of 187 ms against 167 ms.
+A first run without warm-up gave the same picture: 274 ms against 4.7 ms for the sweep query, and a p99 of 187 ms against 167 ms. A repeat of the table run kept the direction with smaller gaps: 279 ms against 6.4 ms for the sweep query, a p99 of 158 ms against 142 ms, and 88,515 against 101,580 new holds.
 
-The prediction was wrong: the p99 of the seconds with a sweep is no higher than that of the other seconds, so the scan causes no spike. Yet without the index the whole run is slower. Two findings were not predicted:
+The prediction was wrong: in both warmed-up runs the p99 of the seconds with a sweep stays within 16 ms of that of the other seconds, with or without the index, so the scan causes no spike. Yet without the index the whole run is slower. Two findings were not predicted:
 - A sweep takes seconds, much longer than its query, because each per-section transaction waits for a connection of the pool that the 32 callers keep busy. A seat therefore comes back several sweep intervals after its hold expired, not within one as ADR-0007 assumed.
-- The index raises throughput by a third and lowers p99 by 50 ms. One explanation, not verified: the workers of the parallel scan compete for the CPU of the laptop during most of the run, since the sweeps last most of it.
+- The index raises throughput and lowers p99, by a third and 49 ms in the table, by 15 % and 16 ms in the repeat. One explanation, not verified: the workers of the parallel scan compete for the CPU of the laptop during most of the run, since the sweeps last most of it.
 
 ## Decision
 
@@ -34,10 +34,10 @@ Alternatives considered:
 
 Positive:
 - The sweep query takes milliseconds and stops growing with the number of confirmed and expired holds.
-- In this run, sweeps kept closer to their interval and new holds were faster and more numerous.
+- In these runs, sweeps kept closer to their interval and new holds were faster and more numerous.
 
 Negative:
 - Every new hold writes one more index entry, and so does every confirmation or expiry that removes it from the index. Not measured on its own; throughput rose overall.
 - `CREATE INDEX` blocks writes to `seat_hold` while it builds. Harmless on the tables of today; a large table would need `CREATE INDEX CONCURRENTLY` outside a transaction.
 - Under load a sweep still takes seconds, because it shares the connection pool with the requests. The return of a seat is late by several sweep intervals; ADR-0007 is wrong on that point. Not addressed here.
-- Why the index improved p99 is not proven, and each variant ran once, in a fixed order, with `fsync` off. The numbers only compare the two variants.
+- Why the index improved p99 is not proven, and each variant ran three times, always second for the index, with `fsync` off. The numbers only compare the two variants, and the size of the gain varies between runs.
