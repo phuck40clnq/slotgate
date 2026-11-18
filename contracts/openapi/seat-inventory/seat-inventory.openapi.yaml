@@ -124,6 +124,26 @@ paths:
               schema:
                 $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
 
+  /api/v1/seat-inventory/me/holds:
+    get:
+      operationId: listStudentHolds
+      summary: List the current holds of the calling student with their section, ordered by section code
+      description: >
+        A hold is current while it is confirmed, or held and before its `expiresAt`. A held hold leaves the list
+        once its `expiresAt` passes, even before its seat goes back to the section, since it can no longer be
+        confirmed.
+      parameters:
+        - $ref: "#/components/parameters/StudentId"
+      responses:
+        "200":
+          description: Current holds, possibly none
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentHoldsResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+
 components:
   parameters:
     SectionId:
@@ -246,3 +266,47 @@ components:
             - HELD
             - CONFIRMED
             - EXPIRED
+
+    StudentHoldsResponse:
+      type: object
+      required:
+        - holds
+      properties:
+        holds:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentHoldResponse"
+
+    StudentHoldResponse:
+      type: object
+      required:
+        - holdId
+        - sectionId
+        - sectionCode
+        - sectionTitle
+        - heldAt
+        - expiresAt
+        - status
+      properties:
+        holdId:
+          type: string
+          format: uuid
+        sectionId:
+          type: string
+          format: uuid
+        sectionCode:
+          type: string
+        sectionTitle:
+          type: string
+        heldAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          description: When a hold that is still `HELD` leaves the list. Ignored once the hold is `CONFIRMED`.
+        status:
+          type: string
+          enum:
+            - HELD
+            - CONFIRMED

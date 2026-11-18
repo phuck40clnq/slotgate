@@ -2,6 +2,7 @@ package com.example.seatinventory.scenario;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -37,6 +38,11 @@ class CheckThenWriteSeatInventory implements SeatInventoryPort {
     @Override
     public List<Section> listSections() {
         return seatInventory.listSections();
+    }
+
+    @Override
+    public List<Section> findSections(Set<UUID> sectionIds) {
+        return seatInventory.findSections(sectionIds);
     }
 
     @Override
