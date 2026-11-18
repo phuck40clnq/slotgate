@@ -1,5 +1,6 @@
 package com.example.seatinventory.application.port.out;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,9 +12,17 @@ import com.example.seatinventory.domain.model.Section;
  */
 public interface SeatInventoryPort {
 
-    void save(Section section);
+    /**
+     * Saves the section unless another section has its code. Atomic: of concurrent saves with one code, at most
+     * one succeeds.
+     *
+     * @return whether the section was saved
+     */
+    boolean saveIfCodeIsFree(Section section);
 
     Optional<Section> findSection(UUID sectionId);
+
+    List<Section> listSections();
 
     /**
      * Claims one seat of a section. Atomic: concurrent callers never claim more seats than the capacity.

@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.example.seatinventory.application.dto.OpenSectionCommand;
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
 import com.example.seatinventory.application.port.in.OpenSectionUseCase;
 import com.example.seatinventory.application.port.out.IdGeneratorPort;
@@ -20,6 +19,7 @@ import com.example.seatinventory.application.usecase.ReserveSeatService;
 import com.example.seatinventory.domain.model.HoldPeriod;
 import com.example.seatinventory.support.ParallelCallers;
 import com.example.seatinventory.support.PostgresIntegrationTest;
+import com.example.seatinventory.support.SectionFixtures;
 
 /**
  * PRD failure scenario "two students compete for the last seat", with before and after numbers.
@@ -72,7 +72,7 @@ class OversellScenario extends PostgresIntegrationTest {
     private int runAgainst(String label, SeatInventoryPort seatInventory) {
         ReserveSeatService reserveSeat =
             new ReserveSeatService(seatInventory, seatHolds, idGenerator, clock, holdPeriod);
-        UUID sectionId = openSection.openSection(new OpenSectionCommand(SEATS)).sectionId();
+        UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(SEATS)).sectionId();
 
         ParallelCallers.Outcome outcome = ParallelCallers.run(CALLERS, callerIndex ->
             transaction.executeWithoutResult(status ->

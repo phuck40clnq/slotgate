@@ -23,7 +23,8 @@ class GetSectionServiceTest {
 
         SectionResult result = service.getSection(SECTION_ID);
 
-        assertThat(result).isEqualTo(new SectionResult(SECTION_ID, 40, 40));
+        assertThat(result).isEqualTo(new SectionResult(
+            SECTION_ID, SectionFixtures.SECTION_CODE, SectionFixtures.SECTION_TITLE, 40, 40));
     }
 
     @Test

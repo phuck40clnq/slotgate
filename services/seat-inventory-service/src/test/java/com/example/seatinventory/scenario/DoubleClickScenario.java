@@ -12,12 +12,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
-import com.example.seatinventory.application.dto.OpenSectionCommand;
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
 import com.example.seatinventory.application.port.in.OpenSectionUseCase;
 import com.example.seatinventory.application.port.in.ReserveSeatUseCase;
 import com.example.seatinventory.support.ParallelCallers;
 import com.example.seatinventory.support.PostgresIntegrationTest;
+import com.example.seatinventory.support.SectionFixtures;
 
 /**
  * PRD failure scenario "a student clicks twice": all requests of one student for one section must end in
@@ -40,7 +40,7 @@ class DoubleClickScenario extends PostgresIntegrationTest {
 
     @Test
     void retryAfterALostResponseKeepsOneHold() {
-        UUID sectionId = openSection.openSection(new OpenSectionCommand(SEATS)).sectionId();
+        UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(SEATS)).sectionId();
         ReserveSeatCommand command = new ReserveSeatCommand(sectionId, STUDENT_ID);
         Set<UUID> holdIds = ConcurrentHashMap.newKeySet();
 
@@ -54,7 +54,7 @@ class DoubleClickScenario extends PostgresIntegrationTest {
     @ParameterizedTest(name = "{0} parallel requests from one student")
     @ValueSource(ints = {2, 20})
     void parallelRequestsKeepOneHold(int requests) {
-        UUID sectionId = openSection.openSection(new OpenSectionCommand(SEATS)).sectionId();
+        UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(SEATS)).sectionId();
         ReserveSeatCommand command = new ReserveSeatCommand(sectionId, STUDENT_ID);
         Set<UUID> holdIds = ConcurrentHashMap.newKeySet();
 

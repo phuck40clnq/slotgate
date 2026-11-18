@@ -1,5 +1,6 @@
 package com.example.seatinventory.scenario;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,13 +25,18 @@ class CheckThenWriteSeatInventory implements SeatInventoryPort {
     }
 
     @Override
-    public void save(Section section) {
-        seatInventory.save(section);
+    public boolean saveIfCodeIsFree(Section section) {
+        return seatInventory.saveIfCodeIsFree(section);
     }
 
     @Override
     public Optional<Section> findSection(UUID sectionId) {
         return seatInventory.findSection(sectionId);
+    }
+
+    @Override
+    public List<Section> listSections() {
+        return seatInventory.listSections();
     }
 
     @Override

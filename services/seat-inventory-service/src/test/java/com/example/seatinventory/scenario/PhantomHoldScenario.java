@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-import com.example.seatinventory.application.dto.OpenSectionCommand;
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
 import com.example.seatinventory.application.port.in.ExpireSeatHoldsUseCase;
 import com.example.seatinventory.application.port.in.GetSectionUseCase;
@@ -27,6 +26,7 @@ import com.example.seatinventory.application.port.in.ReserveSeatUseCase;
 import com.example.seatinventory.common.error.SeatInventoryBusinessErrorCode;
 import com.example.seatinventory.common.exception.BusinessException;
 import com.example.seatinventory.support.PostgresIntegrationTest;
+import com.example.seatinventory.support.SectionFixtures;
 
 /**
  * PRD failure scenario "phantom holds": students hold every seat of a section and never confirm. Without a
@@ -56,7 +56,7 @@ class PhantomHoldScenario extends PostgresIntegrationTest {
 
     @Test
     void withoutASweepAbandonedHoldsKeepTheSectionFull() {
-        UUID sectionId = openSection.openSection(new OpenSectionCommand(SEATS)).sectionId();
+        UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(SEATS)).sectionId();
         abandonEverySeat(sectionId);
 
         await().during(PATIENCE).atMost(PATIENCE.plusSeconds(1)).pollInterval(RETRY_PAUSE)
@@ -69,7 +69,7 @@ class PhantomHoldScenario extends PostgresIntegrationTest {
 
     @Test
     void aSweepGivesTheSeatsBackSoonAfterTheHoldsExpire() {
-        UUID sectionId = openSection.openSection(new OpenSectionCommand(SEATS)).sectionId();
+        UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(SEATS)).sectionId();
         List<Instant> expiries = abandonEverySeat(sectionId);
 
         SeatsBack seatsBack = whileSweeping(() -> awaitSeatsBack(sectionId));

@@ -6,9 +6,19 @@ info:
 
 paths:
   /api/v1/seat-inventory/sections:
+    get:
+      operationId: listSections
+      summary: List every section with the seats left, ordered by code
+      responses:
+        "200":
+          description: Sections found, possibly none
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SectionsResponse"
     post:
       operationId: openSection
-      summary: Open a section with a fixed number of seats
+      summary: Open a section with a code, a title and a fixed number of seats
       requestBody:
         required: true
         content:
@@ -24,6 +34,12 @@ paths:
                 $ref: "#/components/schemas/SectionResponse"
         "400":
           $ref: "#/components/responses/Error"
+        "409":
+          description: Another section already has this code (`SECTION_CODE_TAKEN`)
+          content:
+            application/json:
+              schema:
+                $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
 
   /api/v1/seat-inventory/sections/{sectionId}:
     get:
@@ -147,8 +163,19 @@ components:
     OpenSectionRequest:
       type: object
       required:
+        - code
+        - title
         - capacity
       properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: Unique among all sections, for example a course code and a group number
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
         capacity:
           type: integer
           format: int32
@@ -158,18 +185,34 @@ components:
       type: object
       required:
         - sectionId
+        - code
+        - title
         - capacity
         - seatsLeft
       properties:
         sectionId:
           type: string
           format: uuid
+        code:
+          type: string
+        title:
+          type: string
         capacity:
           type: integer
           format: int32
         seatsLeft:
           type: integer
           format: int32
+
+    SectionsResponse:
+      type: object
+      required:
+        - sections
+      properties:
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectionResponse"
 
     SeatHoldResponse:
       type: object

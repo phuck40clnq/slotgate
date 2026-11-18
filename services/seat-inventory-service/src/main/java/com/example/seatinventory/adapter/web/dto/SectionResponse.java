@@ -4,9 +4,10 @@ import java.util.UUID;
 
 import com.example.seatinventory.application.dto.SectionResult;
 
-public record SectionResponse(UUID sectionId, int capacity, int seatsLeft) {
+public record SectionResponse(UUID sectionId, String code, String title, int capacity, int seatsLeft) {
 
     public static SectionResponse from(SectionResult result) {
-        return new SectionResponse(result.sectionId(), result.capacity(), result.seatsLeft());
+        return new SectionResponse(
+            result.sectionId(), result.code(), result.title(), result.capacity(), result.seatsLeft());
     }
 }

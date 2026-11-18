@@ -12,12 +12,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
-import com.example.seatinventory.application.dto.OpenSectionCommand;
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
 import com.example.seatinventory.application.port.in.OpenSectionUseCase;
 import com.example.seatinventory.application.port.in.ReserveSeatUseCase;
 import com.example.seatinventory.support.ParallelCallers;
 import com.example.seatinventory.support.PostgresIntegrationTest;
+import com.example.seatinventory.support.SectionFixtures;
 
 class ReserveSeatConcurrencyIT extends PostgresIntegrationTest {
 
@@ -33,7 +33,7 @@ class ReserveSeatConcurrencyIT extends PostgresIntegrationTest {
     @ParameterizedTest(name = "{0} seats, {1} parallel callers")
     @CsvSource({"1, 2", "1, 200", "10, 200", "200, 200"})
     void neverHoldsMoreSeatsThanCapacity(int capacity, int callers) {
-        UUID sectionId = openSection.openSection(new OpenSectionCommand(capacity)).sectionId();
+        UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(capacity)).sectionId();
 
         ParallelCallers.Outcome outcome = ParallelCallers.run(callers, callerIndex ->
             reserveSeat.reserveSeat(new ReserveSeatCommand(sectionId, new UUID(0, callerIndex))));
@@ -47,7 +47,7 @@ class ReserveSeatConcurrencyIT extends PostgresIntegrationTest {
     @ParameterizedTest(name = "{0} parallel requests from one student")
     @ValueSource(ints = {2, 200})
     void holdsOneSeatForParallelRequestsOfOneStudent(int requests) {
-        UUID sectionId = openSection.openSection(new OpenSectionCommand(10)).sectionId();
+        UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(10)).sectionId();
         ReserveSeatCommand command = new ReserveSeatCommand(sectionId, new UUID(0, 1));
         Set<UUID> holdIds = ConcurrentHashMap.newKeySet();
 

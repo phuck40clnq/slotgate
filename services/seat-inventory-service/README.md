@@ -10,7 +10,8 @@ The contract is [seat-inventory.openapi.yaml](../../contracts/openapi/seat-inven
 
 | Method and path | Purpose | Errors |
 |---|---|---|
-| `POST /api/v1/seat-inventory/sections` | Open a section with a capacity | `400 INVALID_REQUEST` |
+| `POST /api/v1/seat-inventory/sections` | Open a section with a `code` unique among all sections, a `title` and a capacity | `400 INVALID_REQUEST`, `409 SECTION_CODE_TAKEN` |
+| `GET /api/v1/seat-inventory/sections` | List every section with the seats left, ordered by code | |
 | `GET /api/v1/seat-inventory/sections/{sectionId}` | Read a section and the seats left | `404 SECTION_NOT_FOUND` |
 | `POST /api/v1/seat-inventory/sections/{sectionId}/holds` | Hold one seat for the student in `X-Internal-User-Id` until `expiresAt`: `201` for a new hold, `200` with the existing hold when the student asks again | `404 SECTION_NOT_FOUND`, `409 SECTION_FULL` |
 | `POST /api/v1/seat-inventory/sections/{sectionId}/holds/{holdId}/confirmation` | Confirm the student's hold before it expires, so the seat stays theirs: `200`, also when confirmed again | `404 HOLD_NOT_FOUND`, `409 HOLD_EXPIRED` |
@@ -39,6 +40,14 @@ SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
 ```
 
 The port is `8084`. The variables are listed in `.env.example`.
+
+To open the simulated sections of [simulated-sections.json](scripts/simulated-sections.json) in the running service (needs `curl` and `jq`; a section whose code exists is skipped, so it is safe to run again):
+
+```bash
+./scripts/seed-simulated-sections.sh
+```
+
+`SEAT_INVENTORY_URL` points it at another instance than `http://localhost:8084`.
 
 ## Test
 

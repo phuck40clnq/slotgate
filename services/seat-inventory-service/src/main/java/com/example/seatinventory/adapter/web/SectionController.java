@@ -16,12 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.seatinventory.adapter.web.dto.OpenSectionRequest;
 import com.example.seatinventory.adapter.web.dto.SeatHoldResponse;
 import com.example.seatinventory.adapter.web.dto.SectionResponse;
+import com.example.seatinventory.adapter.web.dto.SectionsResponse;
 import com.example.seatinventory.application.dto.ConfirmSeatHoldCommand;
 import com.example.seatinventory.application.dto.OpenSectionCommand;
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
 import com.example.seatinventory.application.dto.SeatHoldResult;
 import com.example.seatinventory.application.port.in.ConfirmSeatHoldUseCase;
 import com.example.seatinventory.application.port.in.GetSectionUseCase;
+import com.example.seatinventory.application.port.in.ListSectionsUseCase;
 import com.example.seatinventory.application.port.in.OpenSectionUseCase;
 import com.example.seatinventory.application.port.in.ReserveSeatUseCase;
 
@@ -34,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 public class SectionController {
 
     private final OpenSectionUseCase openSectionUseCase;
+    private final ListSectionsUseCase listSectionsUseCase;
     private final GetSectionUseCase getSectionUseCase;
     private final ReserveSeatUseCase reserveSeatUseCase;
     private final ConfirmSeatHoldUseCase confirmSeatHoldUseCase;
@@ -41,7 +44,13 @@ public class SectionController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SectionResponse openSection(@Valid @RequestBody OpenSectionRequest request) {
-        return SectionResponse.from(openSectionUseCase.openSection(new OpenSectionCommand(request.capacity())));
+        return SectionResponse.from(openSectionUseCase.openSection(
+            new OpenSectionCommand(request.code(), request.title(), request.capacity())));
+    }
+
+    @GetMapping
+    public SectionsResponse listSections() {
+        return SectionsResponse.from(listSectionsUseCase.listSections());
     }
 
     @GetMapping("/{sectionId}")
