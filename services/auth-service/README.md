@@ -1,206 +1,56 @@
-# Auth Service
+# auth-service
 
-Auth Service is the platform’s identity entry point.
+The service that registers users, checks their passwords and issues the signed tokens the gateway verifies. For anyone who changes how users sign up or sign in.
 
-It is responsible for authenticating users, issuing signed JWT access tokens, and publishing authentication domain events.
+## Why it exists
 
-JWT verification is handled by the Gateway.
+Credentials stay in one service, so no other service ever sees a password. It owns credentials only; profiles belong to `user-service`, and permissions to each service.
 
----
+## API and events
 
-## Table of contents
-- [Overview](#overview)
-- [Responsibilities](#responsibilities)
-- [Architecture](#architecture)
-    - [Adapter layer](#adapter-layer)
-    - [Application layer](#application-layer)
-    - [Domain layer](#domain-layer)
-    - [Infrastructure layer](#infrastructure-layer)
-- [Security Model](#security-model)
-    - [Token type](#token-type)
-    - [JWT Claims](#jwt-claims)
-    - [Verification](#verification)
-    - [Refresh token](#refresh-token)
-- [Event Integration](#event-integration)
-- [Contracts](#contracts)
-- [Configuration](#configuration)
-- [How to run local](#how-to-run-local)
-    - [Requirements](#requirements)
-    - [Run the service](#run-the-service)
-- [Deployment](#deployment)
-- [Future Improvements](#future-improvements)
-- [More Information](#more-information)
-    - [Documentation about JWT](#documentation-about-jwt)
+- The endpoints and the token are described in [authentication](../../docs/architecture/authentication.md). They have no OpenAPI contract in `contracts/openapi/`.
+- Events, defined in `contracts/avro/auth/events/`:
 
----
+| Event | Topic | Published when |
+|---|---|---|
+| `UserRegistered` | `auth-user-events` | A user registers |
+| `UserLoggedIn` | `auth-security-events` | A user signs in |
 
-## Overview
-
-Auth Service is built using Clean Architecture (Ports & Adapters).
-
-It acts as an internal JWT issuer within a contract-governed microservice system.
-
-This service:
-- Issues RSA-signed access tokens
-- Exposes a JWKS endpoint for public key discovery
-- Publishes authentication events to Apache Kafka
-- Does **not** act as a full OAuth2 Authorization Server
-
-It manages **authentication credentials only** — not full user domain data.
-
----
-
-## Responsibilities
-
-- User registration
-- User login
-- Password hashing and verification
-- Access token issuance
-- JWKS exposure
-- Publishing authentication domain events
-
-*Auth Service is **not** the source of truth for user profile data or authorization policies*.
-
----
-
-## Architecture
-The service follows a strict separation of concerns.
-
-### Adapter Layer
-- REST controllers
-- System endpoints (e.g., JWKS)
-
-### Application Layer
-- Use cases
-- Command / Result DTOs
-- Input and Output ports
-
-### Domain Layer
-- Core models
-- Domain events
-
-### Infrastructure Layer
-- JPA persistence
-- Kafka integration
-- JWT & RSA signing
-- Password encoding
-
-All external integrations are accessed through ports to preserve domain isolation and testability.
-
----
-
-## Security Model
-
-### Token Type
-- Access token only
-- RSA signed (RS256)
-- Keys provided via PEM files
-- Public key exposed through JWKS
-
-The service acts strictly as a **token issuer**.
-
-### JWT Claims
-Access tokens contain minimal identity information:
-- `iss`
-- `sub` (userId)
-- `aud`
-- `iat`
-- `exp`
-
-No roles or scopes are embedded in the token.
-
-### Verification
-JWT verification is performed externally by Gateway using the JWKS endpoint.
-
-### Refresh Token
-Refresh token support is not implemented yet.
-
----
-
-## Event Integration
-Auth Service publishes authentication domain events to Kafka using Avro-based contracts:
-- [`UserRegistered`](./src/main/resources/contracts/avro/UserRegistered.avsc)
-- [`UserLoggedIn`](./src/main/resources/contracts/avro/UserLoggedIn.avsc)
-
-Events:
-- Are defined through Avro schema contracts
-- Follow contract-first governance
-- Are mapped from domain events via dedicated mappers
-- Routed via explicit event router registry
-
-Downstream services consume these events to build independent projections and maintain eventual consistency.
-
----
-
-## Contracts
-The service aligns with platform-level contracts:
-- OpenAPI (HTTP layer)
-- Avro (Event layer)
-
-Contracts are treated as the canonical schema layer of the system and define inter-service communication boundaries.
-
----
+The service also listens to `auth-auth-events`, which nothing in the repository publishes.
 
 ## Configuration
-Environment-specific configurations provided via:
-- [`application-local.yml`](./src/main/resources/application-local.yml)
-- [`application-dev.yml`](./src/main/resources/application-dev.yml)
-- [`application-prod.yml`](./src/main/resources/application-prod.yml)
 
-    And [`application.yml`](./src/main/resources/application.yml)
+| Variable | Meaning |
+|---|---|
+| `SERVICE_NAME` | Name in logs and Kafka consumer group; defaults to `auth-service` |
+| `PORT` | HTTP port; defaults to `8082` |
+| `SPRING_PROFILES_ACTIVE` | `local` for the local database and Kafka at `localhost:9092` |
+| `DB_NAME`, `DB_USER`, `DB_PASS` | Database `slotgate_auth`; the `local` defaults match `infrastructure/postgres/` |
+| `OAUTH_JWK_SET_URI` | Written into the `iss` claim of every token; required, without default |
+| `SCHEMA_REGISTRY_URL` | Schema Registry; defaults to `http://localhost:8081` |
 
-Primary configuration areas include:
-- Database connection
-- Kafka connectivity
-- Logging configuration
-- JWT issuer and expiration
-- RSA key locations
+## Run
 
----
+Generate the key pair once, as step 3 of the root [`README.md`](../../README.md#getting-started) shows, then:
 
-## How to run (local)
-
-### Requirements
-- Java 21
-
-> Make sure infrastructure (Database, Apache Kafka, etc.) is already running.
->
-> See platform setup guide in the [root README](./../../README.md#getting-started):
-
----
-
-### Run the service
-From project root:
-
-#### macOS / Linux
 ```bash
 cd services/auth-service
-./mvnw spring-boot:run
+SPRING_PROFILES_ACTIVE=local OAUTH_JWK_SET_URI=http://localhost:8082/oauth2/jwks ./mvnw spring-boot:run
 ```
 
-#### Windows (PowerShell / CMD)
-```PowerShell
+Registering and signing in publish events, so they need Kafka and Schema Registry from [`infrastructure/kafka/`](../../infrastructure/kafka/README.md).
+
+## Test
+
+```bash
 cd services/auth-service
-mvnw.cmd spring-boot:run
+./mvnw verify
 ```
 
----
+The only test checks that the application starts.
 
-## Deployment
-- Independently deployable
+## Details
 
----
-
-## Future Improvements
-- Refresh token support
-- Key rotation strategy
-- Token revocation mechanism
-- Optional OAuth2 compatibility layer (if required)
-
----
-
-## More Information
-
-### Documentation about JWT
-- [Decision of using JWT](../../docs/adr/0003-use-jwt-rsa.md)
-- [Architecture of authentication](../../docs/architecture/authentication.md)
+- Why tokens are JWTs signed with RSA: [ADR-0003](../../docs/adr/0003-use-jwt-rsa.md)
+- Signing: `infrastructure/security/jwt/`
+- Events: `infrastructure/messaging/kafka/producer/`

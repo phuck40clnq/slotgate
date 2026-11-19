@@ -46,6 +46,7 @@ Requirements: Java 21, Maven 3.9 or later, and PostgreSQL 14 or later on `localh
 3. Generate the JWT key pair of `auth-service`, once per machine; both files stay out of git:
 
    ```bash
+   mkdir -p services/auth-service/src/main/resources/keys
    cd services/auth-service/src/main/resources/keys
    openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
    openssl rsa -pubout -in private.pem -out public.pem
