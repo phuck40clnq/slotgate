@@ -76,5 +76,5 @@ How automated tests are written and run in every service, for everyone who write
 
 | ID | Rule | Check |
 |---|---|---|
-| TEST-28 | Line coverage of domain and application code MUST stay at or above 80 %, and branch coverage at or above 70 %; the build MUST fail below either. | Build |
+| TEST-28 | Line coverage of domain and application code MUST stay at or above 80 %, and branch coverage at or above 70 %; the build MUST fail below either. | Coverage check |
 | TEST-29 | A test MUST assert behaviour, because coverage is a floor and executed code without an assertion proves nothing. | Review |
