@@ -99,7 +99,7 @@ Bad:   chore(user): update stuff and fix tests and refactor handler   (several c
 - The description MUST be filled in from the [pull request template](.github/pull_request_template.md). Every item of its Definition of Done MUST be checked or explained.
 - A pull request SHOULD change at most 400 lines, excluding generated files. Larger work is split into a stack of smaller pull requests. Purely mechanical changes (renames, formatting) are the only exception and are stated as such.
 - A contract change MUST show its compatibility check and update every consumer in the same pull request or a linked one.
-- An architectural decision MUST include its ADR in [docs/adr/](docs/adr/overview.md) in the same pull request.
+- An architectural decision MUST include its ADR in [docs/adr/](docs/adr/README.md) in the same pull request.
 - All CI checks MUST pass. Checks are never skipped, disabled or retried until green.
 - Before asking for review, the author reads the full diff on GitHub as a reviewer would.
 - Merge with **squash** only, then delete the branch.
