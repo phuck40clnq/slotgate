@@ -116,7 +116,7 @@ Every document follows this skeleton:
 | DOC-29 | A sentence that can be removed without losing information MUST be removed. | Review |
 | DOC-30 | The words `simply`, `just`, `easily`, `obviously`, `clearly`, `very`, `robust`, `seamless` and `powerful` MUST NOT be used, because they claim a quality instead of showing it. | Review |
 | DOC-31 | A domain term MUST be the one defined in `docs/core/product.md`, and one thing MUST keep one name across all documents. | Review |
-| DOC-32 | An abbreviation MUST be spelled out on first use, except API, HTTP, ID, JSON, JWT, RFC, SQL, URL, UTC and UUID. | Review |
+| DOC-32 | An abbreviation MUST be spelled out on first use, except ADR, API, HTTP, ID, JSON, JWKS, JWT, p99, RFC, SQL, URL, UTC and UUID. | Review |
 | DOC-33 | A quantity MUST be written in digits, with commas between thousands and a space before its unit, as in `20,000 students`, `300 ms` and `15 %`. Counts below ten in running text MAY be words. | Review |
 | DOC-34 | A date MUST be written as `YYYY-MM-DD`, and a time in UTC as `HH:MM UTC`. | Review |
 | DOC-35 | A measured number MUST state how it was measured: the command or scenario, the data size and the machine. | Review |
