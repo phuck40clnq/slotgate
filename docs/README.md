@@ -80,7 +80,7 @@ A choice that affects none of the qualities in the second row needs no ADR.
 | ID | Rule | Check |
 |---|---|---|
 | DOC-17 | A document MUST NOT restate code, a contract or another document; it MUST link to it instead. | Review |
-| DOC-18 | A document MUST NOT describe what is not built: no plans, placeholder sections or "coming soon" notes. | Review |
+| DOC-18 | A description or guide MUST NOT describe what is not built: no plans, placeholder sections or "coming soon" notes. Core and standards MAY bind what is not built yet, because they set the requirements the work follows. | Review |
 | DOC-19 | A document MUST NOT list open work, because such a list goes stale; open work is tracked as an issue. | Review |
 | DOC-20 | Rules MUST live only in documents of this repository. Tool and agent configuration MAY point to them, but MUST NOT define or override a rule. | Review |
 
