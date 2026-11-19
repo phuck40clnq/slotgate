@@ -106,7 +106,7 @@
                     </executions>
                 </plugin>
 
-                <!-- Coverage floor from docs/rules/testing.md, for domain and application only -->
+                <!-- Coverage floor of TEST-28 in docs/standards/testing.md, for domain and application only -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
