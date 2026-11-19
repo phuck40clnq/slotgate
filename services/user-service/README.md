@@ -1,175 +1,55 @@
-# User Service
+# user-service
 
-User Service manages user domain data and profile lifecycle within the platform.
+The service that keeps user profiles, created from the registrations of `auth-service`. For anyone who changes what a profile holds or how it is read and edited.
 
-It consumes authentication events and maintains its own user projection independently.
+## Why it exists
 
----
+A profile changes for other reasons than a password, so profiles live apart from credentials. The service builds them from events, without calling `auth-service`, as CORE-08 requires.
 
-## Table of contents
-- [Overview](#overview)
-- [Responsibilities](#responsibilities)
-- [Architecture](#architecture)
-	- [Adapter layer](#adapter-layer)
-	- [Application layer](#application-layer)
-	- [Domain layer](#domain-layer)
-	- [Infrastructure layer](#infrastructure-layer)
-- [Security Model](#security-model)
-- [Event Integration](#event-integration)
-- [Contracts](#contracts)
-- [Configuration](#configuration)
-- [How to run local](#how-to-run-local)
-	- [Requirements](#requirements)
-	- [Run the service](#run-the-service)
-- [Deployment](#deployment)
-- [Future Improvements](#future-improvements)
+## API and events
 
----
+The caller is the user in `X-Internal-User-Id`. The contract `contracts/openapi/user/user.openapi.yaml` does not describe these endpoints yet.
 
-## Overview
+| Endpoint | What it does |
+|---|---|
+| `GET /api/v1/user/me/profile` | Returns `userId`, `email`, `fullName` and `status` of the caller |
+| `PUT /api/v1/user/me/profile/edit` | Changes `fullName` and `avatarUrl` of the caller |
 
-User Service is built using Clean Architecture (Ports & Adapters).
+| Event | Topic | What the service does |
+|---|---|---|
+| `UserRegistered` | `auth-user-events` | Creates a profile with the full name `Default full name` |
 
-It is responsible for maintaining user domain data independently from the authentication layer.
-
-This service:
-- Consumes user-related domain events from Apache Kafka
-- Creates and maintains user profile projections
-- Exposes user-related APIs
-- Publishes user domain events when necessary
-
-User Service does **not** handle authentication or token issuance.
-
----
-
-## Responsibilities
-
-- Create user profile from authentication events
-- Maintain user profile data
-- Handle profile updates
-- Expose user-related APIs
-- Publish user domain events (if required)
-
-*User Service owns the user domain model but **not** authentication credentials*.
-
----
-
-## Architecture
-The service follows a strict separation of concerns.
-
-### Adapter Layer
-- REST controllers
-- Messaging handlers
-
-### Application Layer
-- Use cases
-- Command / Result DTOs
-- Input and Output ports
-
-### Domain Layer
-- UserProfile aggregate
-- UserStatus model
-- Domain events
-
-
-### Infrastructure Layer
-- JPA persistence
-- Kafka integration
-- Event translators and mappers
-
-All external integrations are accessed through ports to preserve domain isolation and testability.
-
----
-
-## Security Model
-- Identity validation is performed upstream by the API Gateway.
-- User Service operates on already-validated identity context.
-- Authorization rules, if introduced, belong to the application layer.
-
-User Service does not issue or validate JWT tokens directly.
-
----
-
-## Event Integration
-User Service consumes authentication events from Kafka using Avro-based contracts:
-- [`UserRegistered`](./src/main/resources/contracts/avro/UserRegistered.avsc) published from Auth Service
-
-Event flow:
-
-Example: `UserRegistered`
-1. Auth Service publishes UserRegistered
-2. User Service consumes the event
-3. A user profile projection is created internally
-
-Events:
-- Are defined through Avro schema contracts
-- Follow contract-first governance
-- Are translated into domain commands
-- Handled via an explicit event dispatcher registry
-
-This ensures loose coupling and eventual consistency between bounded contexts.
-
----
-
-## Contracts
-The service aligns with platform-level contracts:
-- OpenAPI (HTTP layer)
-- Avro (Event layer)
-
-Contracts are treated as the canonical schema layer of the system and define inter-service communication boundaries.
-
----
+The consumer starts from the latest offset and does not skip an event it has already applied.
 
 ## Configuration
-Environment-specific configurations provided via:
-- [`application-local.yml`](./src/main/resources/application-local.yml)
-- [`application-dev.yml`](./src/main/resources/application-dev.yml)
-- [`application-prod.yml`](./src/main/resources/application-prod.yml)
 
-    And [`application.yml`](./src/main/resources/application.yml)
+| Variable | Meaning |
+|---|---|
+| `SERVICE_NAME` | Name in logs and Kafka consumer group; defaults to `user-service` |
+| `PORT` | HTTP port; defaults to `8083` |
+| `SPRING_PROFILES_ACTIVE` | `local` for the local database and Kafka at `localhost:9092` |
+| `DB_NAME`, `DB_USER`, `DB_PASS` | Database `slotgate_user`; the `local` defaults match `infrastructure/postgres/` |
+| `SCHEMA_REGISTRY_URL` | Schema Registry; defaults to `http://localhost:8081` |
 
-Primary configuration areas include:
-- Database connection
-- Kafka connectivity
-- Logging configuration
+## Run
 
----
-
-## How to run (local)
-
-### Requirements
-- Java 21
-
-> Make sure infrastructure (Database, Apache Kafka, etc.) is already running.
->
-> See platform setup guide in the [root README](./../../README.md#getting-started):
-
----
-
-### Run the service
-From project root:
-
-#### macOS / Linux
 ```bash
 cd services/user-service
-./mvnw spring-boot:run
+SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
 ```
 
-#### Windows (PowerShell / CMD)
-```PowerShell
+Profiles are created only from events, so registration needs Kafka and Schema Registry from [`infrastructure/kafka/`](../../infrastructure/kafka/README.md).
+
+## Test
+
+```bash
 cd services/user-service
-mvnw.cmd spring-boot:run
+./mvnw verify
 ```
 
----
+The only test checks that the application starts.
 
-## Deployment
-- Independently deployable
+## Details
 
----
-
-## Future Improvements
-- Additional user lifecycle events
-- Soft-delete / state transitions
-- Audit logging support
-- Role / permission projection (if required)
+- Event handling: `adapter/messaging/handlers/OnUserRegistered.java`
+- Event translation: `infrastructure/messaging/kafka/consumer/`
