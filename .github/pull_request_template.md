@@ -102,6 +102,8 @@ $ ./mvnw verify
 - [ ] New dependencies are justified in this description and come from the platform BOM
 
 ### Documentation and decisions
+- [ ] No [core rule](https://github.com/phuck40clnq/slotgate/blob/main/docs/core/rules.md) is broken, or an accepted ADR changes it first
+- [ ] Every changed document follows the [documentation standard](https://github.com/phuck40clnq/slotgate/blob/main/docs/README.md)
 - [ ] READMEs, architecture docs and `.env.example` reflect the change
 - [ ] Architectural decisions have an ADR in `docs/adr/`, linked above
 - [ ] A failure found while working is recorded in `docs/incidents/` or as an issue
