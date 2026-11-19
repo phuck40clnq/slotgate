@@ -57,8 +57,6 @@ $ ./mvnw verify
 
 <!-- What could go wrong in production and how to undo it. Write "None" only when it is true. -->
 
----
-
 ## Definition of Done
 
 ### Scope and traceability

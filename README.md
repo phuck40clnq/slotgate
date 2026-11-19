@@ -70,6 +70,7 @@ Requirements: Java 21, Maven 3.9 or later, and PostgreSQL 14 or later on `localh
 
 - [Contributing](CONTRIBUTING.md): issues, branches, commits and pull requests
 - [Standards](docs/standards/): coding, testing, services, APIs, events and Java
+- [Guides](docs/guides/): adding a service
 - [Architecture decision records](docs/adr/README.md)
 - [Incidents](docs/incidents/README.md)
 - [Product requirements](docs/prd-2026-10-17.pdf), in Vietnamese, as first agreed with the supervisor
