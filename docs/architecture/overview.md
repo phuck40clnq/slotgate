@@ -24,7 +24,7 @@ flowchart LR
 1. A client calls the gateway at `/api/<service>/...`.
 2. The gateway verifies the JWT against the JWKS that `auth-service` serves at `/oauth2/jwks`, except on `/api/auth/**` and `/api/test/**`.
 3. The gateway sets `X-Internal-User-Id` to the subject of the token, rewrites the path to `/api/v1/<service>/...` and forwards the request.
-4. The service reads the caller only from `X-Internal-User-Id`, following CORE-12, and answers errors in the format of [the error contract](../../contracts/openapi/error/README.md).
+4. The service reads the caller only from `X-Internal-User-Id`, following CORE-12, and answers errors in the format of [the error contract](../../contracts/openapi/error/error.openapi.yaml).
 
 ## Events
 

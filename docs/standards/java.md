@@ -96,7 +96,7 @@ Every service MUST use this layout under `com.example.<service>`:
 - Business rule violations MUST throw `BusinessException` with a code from the service's `*BusinessErrorCode` enum.
 - Technical failures MUST throw `InfrastructureException` with a code from `*InfrasErrorCode`, keeping the original cause.
 - Use cases MUST NOT throw `RuntimeException`, `IllegalStateException` or `IllegalArgumentException` directly.
-- Only the service's global exception handler turns exceptions into HTTP responses, following the `ErrorResponse` contract in [contracts/openapi/error](../../contracts/openapi/error/README.md).
+- Only the service's global exception handler turns exceptions into HTTP responses, following the `ErrorResponse` contract in [contracts/openapi/error](../../contracts/openapi/error/error.openapi.yaml).
 - `catch (Exception e)` MUST appear only in that handler and in message listeners, and MUST log or rethrow.
 
 ---
