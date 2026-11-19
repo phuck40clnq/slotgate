@@ -35,7 +35,7 @@ body:
         - coding standard (docs/standards/coding.md)
         - Java standard (docs/standards/java.md)
         - testing standard (docs/standards/testing.md)
-        - governance rules (docs/standards/governance.md)
+        - core rules (docs/core/rules.md)
         - contract policies (contracts/)
         - contributing rules (CONTRIBUTING.md)
     validations:

@@ -18,7 +18,7 @@ psql -d postgres -f infrastructure/postgres/create-service-databases.sql
 
 These credentials are for local development and match the defaults in each service's `application-local.yml`.
 
-Each role reaches its own database only, following the [data ownership rules](../../docs/standards/governance.md#data-ownership). Names carry the `slotgate_` prefix so they do not collide with other projects on the same server.
+Each role reaches its own database only, following the [data ownership rule](../../docs/core/rules.md#services). Names carry the `slotgate_` prefix so they do not collide with other projects on the same server.
 
 ## Add a service
 

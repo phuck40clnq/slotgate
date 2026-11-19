@@ -112,7 +112,7 @@ Code in a pull request follows:
 - [Coding standard](docs/standards/coding.md)
 - [Java standard](docs/standards/java.md)
 - [Testing standard](docs/standards/testing.md)
-- [Governance rules](docs/standards/governance.md)
+- [Core rules](docs/core/rules.md)
 - [Contract policies](contracts/README.md)
 
 Setup and commands are in the [README](README.md#getting-started).
