@@ -167,7 +167,7 @@ Contracts must be updated when:
 For detailed documentation and architectural reasoning, see:
 
 - [docs/architecture/overview.md](./../docs/architecture/overview.md)
-- [docs/architecture/event-driven.md](./../docs/architecture/event-driven.md)
+- [docs/standards/events.md](./../docs/standards/events.md)
 - [docs/core/rules.md](./../docs/core/rules.md)
 
 Contracts define **what is exposed**.

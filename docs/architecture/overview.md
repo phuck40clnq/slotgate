@@ -28,7 +28,7 @@ flowchart LR
 
 ## Events
 
-Events are Avro records, registered in Schema Registry and defined in [`contracts/avro/`](../../contracts/avro/README.md).
+Events are Avro records, defined in `contracts/avro/` and registered in Schema Registry, following the [event standard](../standards/events.md).
 
 | Event | Topic | Producer | Consumers |
 |---|---|---|---|
@@ -52,5 +52,5 @@ Each service with state owns one PostgreSQL database and role, following CORE-10
 
 - [Gateway](gateway.md)
 - [Authentication](authentication.md)
-- [Event-driven communication](event-driven.md)
+- [Event standard](../standards/events.md)
 - [Architecture decision records](../adr/README.md)
