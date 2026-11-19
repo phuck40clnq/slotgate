@@ -1,97 +1,80 @@
-# Testing Standard
+# Testing standard
 
-## Table of contents
-- [Scope](#scope)
-- [Principles](#principles)
-- [Test types](#test-types)
-- [Rules](#rules)
-- [Naming and structure](#naming-and-structure)
-- [Determinism](#determinism)
-- [Test doubles](#test-doubles)
-- [Test data](#test-data)
-- [Coverage](#coverage)
-
----
-
-## Scope
-
-Rules for automated tests in every service. This file extends [coding.md](./coding.md); Java specifics are in [java.md](./java.md).
-
----
+How automated tests are written and run in every service, for everyone who writes or reviews them. Rules use the prefix `TEST`, and `docs/standards/<language>.md` names the tools and conventions of each language.
 
 ## Principles
 
-- **Tests are the specification.** A reader learns what a component does from its tests.
-- **Fail fast.** A defect is caught by the cheapest test that can catch it, on the developer's machine before CI.
-- **Deterministic.** The same code gives the same result on every run, on every machine.
-- **Self-contained.** A test needs one command and no manual setup. A test that needs infrastructure starts it itself.
-
----
+- Tests are the specification: a reader learns what a component does from its tests
+- The cheapest test that can catch a defect catches it, on the developer's machine first
+- The same code gives the same result on every run and every machine
+- A test needs one command and no manual setup
 
 ## Test types
 
-| Type | Covers | Runs in | Naming | Tools |
-|---|---|---|---|---|
-| Unit | Domain and application logic, no framework context, no I/O | `test` phase | `*Test` | JUnit 5, AssertJ |
-| Architecture | Layering and forbidden dependencies from [java.md](./java.md) | `test` phase | `ArchitectureTest` | ArchUnit |
-| Integration | One adapter against real infrastructure (database, Kafka, HTTP) | `verify` phase | `*IT` | Embedded PostgreSQL (`embedded-postgres`), Spring test slices |
-| Contract | Avro compatibility and OpenAPI conformance | CI | - | Schema Registry, OpenAPI linter |
-| End-to-end | The running system through the gateway | CI | - | Docker Compose |
-| Failure scenario | One scenario from the PRD, reproduced on purpose | On demand | - | Load and fault tools, decided per ADR |
+| Type | Covers | Runs |
+|---|---|---|
+| Unit | Domain and application logic, without a framework context or I/O | Every build |
+| Architecture | Layering and forbidden dependencies of CORE-17 | Every build |
+| Integration | One adapter against the real technology it talks to | Every build, after unit tests |
+| Contract | API conformance and event schema compatibility | Continuous integration |
+| End-to-end | The running system through the gateway | Continuous integration |
+| Scenario | One failure scenario of the product requirements, reproduced on purpose | On demand |
 
----
+## What must be tested
 
-## Rules
+| ID | Rule | Check |
+|---|---|---|
+| TEST-01 | Every change of behaviour MUST come with a test that fails without the change. | Review |
+| TEST-02 | A bug fix MUST start with a test that reproduces the bug. | Review |
+| TEST-03 | Every domain rule MUST have unit tests for the cases it accepts and the cases it rejects. | Review |
+| TEST-04 | Every adapter MUST have an integration test against the real technology, not a mock of it. | Review |
+| TEST-05 | An operation that must stay atomic under concurrency MUST have a test that runs many parallel callers and asserts the invariant. | Review |
+| TEST-06 | A service MUST NOT rely on a test that only starts its application as its single test. | Review |
+| TEST-07 | Each failure scenario of the product requirements MUST have a scenario test that reproduces it and prints the before and after numbers of CORE-24. | Review |
+| TEST-08 | A scenario test MUST run with one command, only on demand, and its component README MUST give that command and its duration. | Review |
 
-- Every behaviour change MUST come with a test that fails without the change.
-- A bug fix MUST start with a test that reproduces the bug.
-- Every rule in `domain` MUST have unit tests for its accepted and rejected cases.
-- Every adapter MUST have an integration test against the real technology, not a mock of it.
-- Every operation that must be atomic under concurrency MUST have a concurrency test that runs many parallel callers and asserts the invariant (for example: confirmed seats never exceed capacity).
-- A test that only checks that the application context starts MUST NOT be the only test of a service.
-- Tests MUST NOT be disabled without a reason and an issue: `@Disabled("Fails on leap seconds, see #42")`.
-- A flaky test is a defect. It MUST be fixed or removed, never retried until it passes.
+## Structure
 
----
-
-## Naming and structure
-
-- Test classes mirror the package of the class under test.
-- Test method names are sentences in camelCase that state the behaviour: `rejectsHoldWhenSectionIsFull`, `releasesSeatWhenHoldExpires`.
-- One behaviour per test. Several assertions are fine when they describe that one behaviour.
-- Arrange, act and assert are separated by one blank line each. No `// given` comments.
-- Tests MUST NOT contain logic (`if`, loops, `try`). Use parameterized tests for tables of cases.
-- Assertions use AssertJ and check observable outcomes, not internal calls.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| TEST-09 | Test code MUST mirror the module of the code under test. | Review |
+| TEST-10 | A test name MUST be a sentence that states the behaviour, as in `rejectsHoldWhenSectionIsFull`. | Review |
+| TEST-11 | A test MUST check one behaviour; several assertions MAY describe that one behaviour. | Review |
+| TEST-12 | Arrange, act and assert MUST be separated by one blank line each, without comments that name them. | Review |
+| TEST-13 | A test MUST NOT contain logic such as conditions, loops or exception handling; a table of cases MUST be a parameterised test. | Review |
+| TEST-14 | An assertion MUST check an observable outcome, not the internal calls that produced it. | Review |
 
 ## Determinism
 
-- Time comes from a fixed `Clock`; identifiers from a deterministic generator.
-- `Thread.sleep` MUST NOT be used. Asynchronous outcomes are awaited with a bounded timeout (Awaitility).
-- Tests MUST NOT depend on execution order or share mutable state.
-- Randomised tests MUST use a fixed seed and print it on failure.
-- Unit tests MUST NOT touch the network, the file system or the system clock.
+| ID | Rule | Check |
+|---|---|---|
+| TEST-15 | Time MUST come from a fixed clock and identifiers from a deterministic generator. | Review |
+| TEST-16 | A test MUST NOT sleep; it MUST await an asynchronous outcome with a bounded timeout. | Review |
+| TEST-17 | Tests MUST NOT depend on their order or share mutable state, and a test that shares a database MUST use data of its own. | Review |
+| TEST-18 | A randomised test MUST use a fixed seed and print it when it fails. | Review |
+| TEST-19 | A unit test MUST NOT touch the network, the file system or the system clock. | Review |
+| TEST-20 | A test that needs infrastructure MUST start it itself, without Docker on the developer's machine. | Review |
 
----
+## Test doubles and data
 
-## Test doubles
+| ID | Rule | Check |
+|---|---|---|
+| TEST-21 | A test double MAY replace only an outbound port, and only in a test of application logic. | Review |
+| TEST-22 | Domain objects, value objects and records MUST NOT be mocked; tests build real ones. | Review |
+| TEST-23 | Technology the project does not own MUST NOT be mocked; the test runs the real technology instead. | Review |
+| TEST-24 | A hand-written fake MUST replace a mocking library whenever the fake is shorter. | Review |
+| TEST-25 | Test data MUST come from small fixture factories per module, as in `SeatFixtures.fullSection()`, not from copied literals. | Review |
 
-- Mocks are allowed only for outbound ports (`*Port`) in application tests.
-- Domain objects, value objects and records MUST NOT be mocked; build real ones.
-- Libraries and infrastructure the project does not own MUST NOT be mocked; run the real technology in the test instead.
-- Prefer simple hand-written fakes over mocking frameworks when a fake is shorter.
+## Failing, flaky and disabled tests
 
----
-
-## Test data
-
-- Test data is built through small fixture factories per module (`SeatFixtures.fullSection()`), not copied literals.
-- Data is simulated. Real personal data MUST NOT appear in tests, fixtures or seed files.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| TEST-26 | A flaky test is a defect, and MUST be fixed or removed, never retried until it passes. | Review |
+| TEST-27 | A disabled test MUST state its reason and its issue where it is disabled. | Review |
 
 ## Coverage
 
-- Line coverage of `domain` and `application` MUST stay at or above 80%, branch coverage at or above 70%. The build fails below that.
-- Coverage is a floor, not a goal. A test that executes code without asserting its behaviour is not accepted.
+| ID | Rule | Check |
+|---|---|---|
+| TEST-28 | Line coverage of domain and application code MUST stay at or above 80 %, and branch coverage at or above 70 %; the build MUST fail below either. | Build |
+| TEST-29 | A test MUST assert behaviour, because coverage is a floor and executed code without an assertion proves nothing. | Review |
