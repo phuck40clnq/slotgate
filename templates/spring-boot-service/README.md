@@ -1,23 +1,35 @@
-# spring-boot-service
+# templates/spring-boot-service
 
-Template for Java services: Java 21, Spring Boot 3, built on [platform/java](../../platform/java/README.md).
+The template that every Java service is copied from, built on [`platform/java`](../../platform/java/README.md). For anyone who creates a Java service or changes what all of them share.
 
----
+## Why it exists
 
-## What it includes
+SVC-01 starts every service from a template, never from another service, so a new service meets the [service standard](../../docs/standards/services.md) from its first commit and inherits no debt.
 
-- Parent POM and BOM from `platform/java`, so dependency versions and build plugins are shared
-- Spring Web, Actuator, Spring Kafka, Spring Data JPA and Lombok
-- JSON logging through `logback-spring.xml` with the shared field names
-- Configuration from environment variables, listed in `.env.example`
-- Maven wrapper (`mvnw`), so the service builds without a local Maven
-- Test gates: `ArchitectureTest` for layering, `./mvnw verify` for `*IT` tests and the coverage floor
+## Configuration
 
----
+`.env.example` lists `SERVICE_NAME`, `PORT` and `SPRING_PROFILES_ACTIVE`; a service adds its own variables below them.
 
-## Using the template
+## Test
 
-Follow [Adding a New Service](../../services/README.md#adding-a-new-service). When copying, replace every sample value:
+```bash
+cd templates/spring-boot-service
+./mvnw verify
+```
+
+`ArchitectureTest` checks the package layout of the [Java standard](../../docs/standards/java.md), and `SampleApplicationTests` checks that the application starts.
+
+## Details
+
+The template holds:
+
+- The parent POM from `platform/java`, so versions and build plugins are shared
+- Spring Web, Actuator, Spring Kafka, Spring Data JPA, Lombok and the Logstash encoder
+- `logback-spring.xml` with the log fields of SVC-06
+- `health` and `metrics` as the only exposed management endpoints
+- The Maven wrapper, so a service builds without a local Maven
+
+When copying it, as the [guide](../../docs/guides/add-a-service.md) shows, replace every sample value, then remove the dependencies the service does not use:
 
 | Item | Template value | Replace with |
 |---|---|---|
@@ -26,7 +38,5 @@ Follow [Adding a New Service](../../services/README.md#adding-a-new-service). Wh
 | Base package | `com.example.sample` | `com.example.<name>` |
 | Application class | `SampleServiceApplication` | `<Name>ServiceApplication` |
 | `SERVICE_NAME` default in `application.yml` | `sample-service` | `<name>-service` |
-| `PORT` default in `application.yml` | `8999` | the next free port |
-| This README | template description | the service's purpose, API, events and configuration |
-
-Then remove the dependencies the service does not use.
+| `PORT` default in `application.yml` | `8999` | The next free port |
+| This README | The template description | The README of the service, following DOC-59 |
