@@ -31,6 +31,7 @@ Every binding document writes its rules the way this section does.
 | Core | `docs/core/` | What Slot Gate is, and what it must never violate | Binding |
 | Standards | `docs/standards/` | How to build a part correctly | Binding |
 | Contracts | `contracts/` | What services and clients exchange | Binding |
+| Contribution templates | `.github/` | What an issue or a pull request must contain | Binding |
 | Architecture decision records (ADRs) | `docs/adr/` | Why one option was chosen over the others | Record |
 | Architecture | `docs/architecture/` | How the running system works now | Description |
 | Component READMEs | `README.md` in the component's folder | What the component is, why it exists, how to run and test it | Description |
@@ -48,7 +49,7 @@ A component is the repository root, `contracts/`, or a folder directly under `se
 | DOC-10 | A record MUST NOT be edited once final, except its status line: an ADR MAY become `Superseded`, and an incident MAY move along its lifecycle. | Review |
 | DOC-11 | API and event references MUST be rendered from `contracts/` and MUST NOT be written by hand. | Review |
 | DOC-12 | A kind with a template MUST keep the template and the rules of that kind in the `README.md` of its folder, and nowhere else. | Review |
-| DOC-13 | Every component MUST have a `README.md` that says what the component is, why it exists, and how to run and test it. | Review |
+| DOC-13 | Every component MUST have a `README.md`. | Review |
 | DOC-14 | Core, contracts, architecture and language-neutral standards MUST NOT name a language, framework or build tool, except as a labelled example, because any service may use another language. | Review |
 | DOC-15 | Language specifics MUST live only in `docs/standards/<language>.md`, `platform/<language>/` and `templates/<language>-service/`. | Review |
 
@@ -66,14 +67,14 @@ A component is the repository root, `contracts/`, or a folder directly under `se
 | Rules that apply across components and fit no existing standard | A new standard in `docs/standards/` | Before the code that follows them |
 | A new or changed API or event | The contract in `contracts/` | Before the code |
 | A new service | Its `README.md` from the template, `docs/architecture/overview.md` and the component table in the root `README.md` | With the code |
-| A new or changed flow across services | The matching document in `docs/architecture/`, or a new one when none matches | With the code |
+| A new or changed flow across services | A document in `docs/architecture/` | With the code |
 | A new or changed configuration key | The component's `.env.example` and `README.md` | With the code |
 | A change to how a component is run, tested or used | The component's `README.md` | With the code |
 | A task of several steps done for the second time | A guide in `docs/guides/` | With the second run |
 | A failure nobody predicted | An incident in `docs/incidents/` | Before the fix |
 | The end of a week | A weekly report in `docs/weekly/` | On the Friday |
 
-A choice that affects none of the qualities in the second row needs no ADR.
+Any other choice needs no ADR.
 
 ## When not to write
 
@@ -105,6 +106,30 @@ Every document follows this skeleton:
 | DOC-23 | Sections MUST be H2 headings, ordered as the reader needs them. H3 MAY split a long section; H4 and deeper MUST NOT be used. | Review |
 | DOC-24 | Headings MUST use sentence case without final punctuation. | Review |
 | DOC-25 | A document MUST NOT contain a hand-written table of contents or horizontal rules, because GitHub renders an outline and headings already separate sections. | Review |
+
+Every component README follows this skeleton:
+
+```markdown
+# <Component name>
+
+<What the component is and who uses it, in at most two sentences.>
+
+## Why it exists
+
+## API and events
+
+## Configuration
+
+## Run
+
+## Test
+
+## Details
+```
+
+| ID | Rule | Check |
+|---|---|---|
+| DOC-59 | A component README MUST use the sections of the skeleton above in that order, and MAY leave out sections that do not apply. | Review |
 
 ## Writing
 
@@ -156,6 +181,7 @@ Every document follows this skeleton:
 |---|---|
 | Core document, guide | 600 |
 | Component README, architecture document | 800 |
+| README of a kind's folder, with its template and rules | 600 |
 | ADR | 1,000 |
 | Standard, this one included | 2,500 |
 | Incident, weekly report | No limit, because evidence is pasted verbatim |
@@ -170,11 +196,6 @@ Every document follows this skeleton:
 | DOC-55 | A document MUST NOT contain `TODO`, `FIXME`, placeholder sections or change logs, because history is in git. | Review |
 | DOC-56 | A non-record document that breaks this standard MUST be brought in line by the next pull request changing it, unless that change only fixes links or names. | Review |
 | DOC-57 | A change to core MUST follow an accepted ADR, and a change to core or to this standard MUST be approved by the project owner. | Review |
+| DOC-58 | A committed document MUST NOT link to, cite or depend on a file that git ignores or excludes, because readers of the repository cannot open it. A command MAY create such a file. | `git check-ignore <path>` |
 
 Reviewers check these rules through the documentation items of the [pull request template](../.github/pull_request_template.md).
-
-## Reading order
-
-1. [`core/product.md`](core/product.md), then [`core/rules.md`](core/rules.md)
-2. The standards for the part being changed
-3. The README of the component being changed, and the ADRs it links to

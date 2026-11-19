@@ -33,7 +33,7 @@ Closes #
 
 ## How it was verified
 
-<!-- Exact commands and their results. Paste the relevant output, not just "tests pass". -->
+<!-- Exact commands and their results. Paste the relevant output, not only "tests pass". -->
 
 ```text
 $ ./mvnw verify
