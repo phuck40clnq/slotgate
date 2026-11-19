@@ -13,7 +13,7 @@ Templates provide:
 
 | Template | Language | Platform baseline |
 |---|---|---|
-| [spring-boot-service](./spring-boot-service/README.md) | Java 21, Spring Boot 3 | [platform/java](../platform/README.md) |
+| [spring-boot-service](./spring-boot-service/README.md) | Java 21, Spring Boot 3 | [platform/java](../platform/java/README.md) |
 
 ---
 

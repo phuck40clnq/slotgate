@@ -98,4 +98,4 @@ When creating a new service:
 For broader system standards and governance:
 - OpenAPI contract policies -> [API standard](./../docs/standards/api.md)
 - Event schema governance -> [event standard](./../docs/standards/events.md)
-- Platform standards -> [platform/](./../platform/README.md)
+- Platform standards -> [platform/](./../platform/java/README.md)

@@ -19,7 +19,7 @@ The repository of Slot Gate, a course registration platform shared by many schoo
 | [`test-service`](services/test-service/README.md) | 6868 | Sandbox for routing, contract and event experiments |
 | [`frontend/web/`](frontend/web/README.md) | | Web client: login, registration, profile |
 | [`contracts/`](contracts/README.md) | | OpenAPI and Avro contracts between services and clients |
-| [`platform/`](platform/README.md) | | Shared build baseline per language |
+| [`platform/java/`](platform/java/README.md) | | Shared build baseline of Java services |
 | [`templates/`](templates/README.md) | | Starting point for a new service per language |
 | [`infrastructure/postgres/`](infrastructure/postgres/README.md) | 5432 | One PostgreSQL database and role per service |
 | [`infrastructure/kafka/`](infrastructure/kafka/README.md) | 9092, 8081, 2181 | Kafka, Schema Registry and ZooKeeper |

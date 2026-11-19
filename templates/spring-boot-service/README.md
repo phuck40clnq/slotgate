@@ -1,6 +1,6 @@
 # spring-boot-service
 
-Template for Java services: Java 21, Spring Boot 3, built on [platform/java](../../platform/README.md).
+Template for Java services: Java 21, Spring Boot 3, built on [platform/java](../../platform/java/README.md).
 
 ---
 
