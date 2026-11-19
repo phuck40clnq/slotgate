@@ -1,188 +1,55 @@
-# Gateway Service
+# gateway-service
 
-Gateway Service is the platform's external entry point and security boundary.
+The only public entry of Slot Gate: it routes client requests to the services, verifies their token and passes on the caller's identity. For anyone who adds a route or changes how requests enter the platform.
 
-It is responsible for request routing, JWT validation, identity propagation, and cross-cutting infrastructure concerns across services.
+## Why it exists
 
-All external HTTP traffic flow through the Gateway.
+CORE-12 makes the gateway the only public entry, so token checks, identity, cross-origin rules and the error format are enforced in one place, and the services stay private. It holds no business logic and no state, and forwards each request to one service, so more instances can be added under load.
 
----
+## API and events
 
-## Table of contents
-- [Overview](#overview)
-- [Responsibilities](#responsibilities)
-- [Architecture](#architecture)
-    - [Configuration Layer](#configuration-layer)
-    - [Filter Layer](#filter-layer)
-    - [Error Handling Layer](#error-handling-layer)
-- [Security Model](#security-model)
-    - [Token Validation](#token-validation)
-    - [Identity Context](#identity-context)
-- [Routing & Identity Propagation](#routing--identity-propagation)
-- [Contracts](#contracts)
-- [Configuration](#configuration)
-- [How to run local](#how-to-run-local)
-    - [Requirements](#requirements)
-    - [Run the service](#run-the-service)
-- [Deployment](#deployment)
-- [Future Improvements](#future-improvements)
-- [More Information](#more-information)
-    - [Documentation about JWT](#documentation-about-jwt)
+| Public path | Forwarded to | Token |
+|---|---|---|
+| `/api/auth/**` | `auth-service` at `/api/v1/auth/**` | Not required |
+| `/api/user/**` | `user-service` at `/api/v1/user/**` | Required |
+| `/api/seat-inventory/**` | `seat-inventory-service` at `/api/v1/seat-inventory/**` | Required |
+| `/api/test/**` | `test-service` at `/api/v1/test/**` | Not required |
 
----
-
-## Overview
-
-Gateway Service is build on Spring Cloud Gateway.
-
-It acts as:
-- The single API entry point
-- The JWT validation layer
-- The identity propagation layer
-- The centralized cross-cutting policy component
-
-The Gateway does **not** contain business logic or domain models.
-
----
-
-## Responsibilities
-
-- Validate JWT tokens using JWKS
-- Enforce authentication requirements
-- Route requests to downstream services
-- Propagate validated identity context downstream
-- Normalize and standardize error responses
-- Apply cross-origin (CORS) configuration
-
-*Gateway is designed to remain stateless and horizontally scalable*.
-
----
-
-## Architecture
-Gateway follows a layered edge architecture focused on security and cross-cuting concerns.
-
-### Configuration Layer
-- Security configuration
-- CORS configuration
-- Identity configuration
-- Route definitions (via configuration files)
-
-This layer defines the **system boundary rules**.
-
-### Filter Layer
-Custom filters handle:
-- Identity propagation
-- Route-based identity skipping (for public endpoints)
-- Header management
-
-Filters are explicitly ordered to **guarantee deterministic execution**.
-
-### Error Handling Layer
-- Centralized error resolver and handler
-- Typed error mappers
-- Unified error response writer
-
-All framework, validation, and network errors are normalized before being returned to clients.
-
-&rarr; This ensures consistent API behavior across services.
-
----
-
-## Security Model
-
-### Token Validation
-- JWT tokens are validated using public keys exposed by Auth Service (via JWKS)
-- Signature, expiration, issuer, and audience are verified
-- Invalid or missing tokens are rejected before routing
-
-The Gateway acts as the *system’s authentication enforcement boundary*.
-
-### Identity Context
-After successful validation:
-- Identity claims (e.g., sub) are extracted
-- Internal headers are injected into downstream requests
-- Downstream services operate on validated identity context
-
-Downstream services rely on the validated identity context and do **not** re-validate tokens.
-
----
-
-## Routing & Identity Propagation
-Gateway:
-- Forwards validated requests to target services
-- Injects identity headers when required
-- Allows configured public routes to bypass authentication
-
-It does **not** transform or interpret business payloads.
-
----
-
-## Contracts
-Gateway respects platform-level contracts:
-- OpenAPI (HTTP boundary)
-- JWT identity contract (issuer and audience alignment)
-
-It does not own domain contracts or event schemas.
-
----
+- Token checks and the `X-Internal-User-Id` header work as [authentication](../../docs/architecture/authentication.md) describes.
+- Every error, including token, routing and network errors, is answered as an `ErrorResponse`, with `traceId` taken from the `X-Trace-Id` request header, or `N/A` without it.
+- Cross-origin requests are accepted from `http://localhost:3000`, with the methods `GET`, `POST`, `PUT`, `DELETE` and `OPTIONS`, the headers `Authorization` and `Content-Type`, and credentials.
+- The gateway publishes and consumes no event.
 
 ## Configuration
-Environment-specific configuration:
-- [`application.yml`](./src/main/resources/application.yml)
-- [`application-local.yml`](./src/main/resources/application-local.yml)
 
-Primary configuration areas:
-- Route definitions
-- JWKS endpoint location
-- JWT validation rules
-- CORS settings
+| Variable | Meaning |
+|---|---|
+| `SERVICE_NAME` | Name in logs; defaults to `gateway-service` |
+| `PORT` | HTTP port; defaults to `8080` |
+| `SPRING_PROFILES_ACTIVE` | `local` sends each route to the fixed local port of its service |
+| `OAUTH_JWK_SET_URI` | Key set of `auth-service`, such as `http://localhost:8082/oauth2/jwks` |
 
----
+## Run
 
-## How to Run (Local)
-
-### Requirements
-- Java 21
-- Auth Service running (for JWKS endpoint)
-- Downstream services running
-
----
-
-### Run the Service
-
-#### macOS / Linux
+`auth-service` must run first, because the gateway reads its keys:
 
 ```bash
 cd services/gateway-service
-./mvnw spring-boot:run
+SPRING_PROFILES_ACTIVE=local OAUTH_JWK_SET_URI=http://localhost:8082/oauth2/jwks ./mvnw spring-boot:run
 ```
 
-#### Windows
+## Test
 
-```PowerShell
+```bash
 cd services/gateway-service
-mvnw.cmd spring-boot:run
+./mvnw verify
 ```
 
----
+The service has no automated tests.
 
-## Deployment
-- Independently deployable
-- Stateless
-- Horizontally scalable
+## Details
 
----
-
-## Future Improvements
-- Rate limiting support
-- Dynamic route configuration
-- Observability improvements (metrics / tracing)
-- Advanced policy enforcement
-
----
-
-## More Information
-
-### Documentation about JWT
-- [Decision of using JWT](../../docs/adr/0003-use-jwt-rsa.md)
-- [Architecture of authentication](../../docs/architecture/authentication.md)
+- Routes: `src/main/resources/application.yml`, and the local ports in `application-local.yml`
+- Public paths: `config/SecurityConfig.java`
+- Identity header: `filter/identity/IdentityPropagationFilter.java`
+- Why tokens are JWTs signed with RSA: [ADR-0003](../../docs/adr/0003-use-jwt-rsa.md)
