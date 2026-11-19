@@ -1,35 +1,17 @@
 # Incidents
 
-## Table of contents
-- [Scope](#scope)
-- [When to write one](#when-to-write-one)
-- [Naming and lifecycle](#naming-and-lifecycle)
-- [Template](#template)
+How an incident record is written, for anyone who meets a failure nobody predicted while building, testing or deliberately breaking Slot Gate. Rules use the prefix `INC`; when a record is written follows DOC-16, and its file name DOC-49.
 
----
+## Rules
 
-## Scope
-
-This directory records unexpected failures found while building, testing or deliberately breaking the system, and the investigation that follows each one. These records are the raw material for root cause analysis and post-mortems (roadmap Phase 3).
-
----
-
-## When to write one
-
-- Write one for every failure you did not predict: a planned break that behaved differently, a test that fails for an unknown reason, a run that misbehaves under load.
-- Write it **before** fixing. Evidence disappears once the cause is fixed.
-- A failure with a known, trivial cause (a missing environment variable) is an issue, not an incident.
-- Follow-up work is filed as issues and linked from the record.
-
----
-
-## Naming and lifecycle
-
-- File name: `YYYY-MM-DD-short-kebab-title.md`, using the detection date.
-- Status moves through `investigating` → `identified` → `resolved` → `reviewed`. A record is `reviewed` once its lessons are written and its follow-up issues exist.
-- Times are in UTC, matching the log timestamps.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| INC-01 | A record MUST be written for every unpredicted failure: a planned break that behaved differently, a test failing for an unknown reason, or a run misbehaving under load. | Review |
+| INC-02 | A failure with a known, trivial cause, such as a missing environment variable, MUST NOT get a record. | Review |
+| INC-03 | The status MUST move through `investigating`, `identified`, `resolved` and `reviewed`, in that order. | Review |
+| INC-04 | A record MUST reach `reviewed` only when its lessons are written and every follow-up action is an issue linked from it. | Review |
+| INC-05 | Evidence MUST be pasted verbatim: logs, trace IDs, event IDs, metrics and commands. | Review |
+| INC-06 | The root cause MUST be the underlying cause, not the trigger, and MUST be confirmed by a row of the investigation table. | Review |
 
 ## Template
 
@@ -43,34 +25,43 @@ This directory records unexpected failures found while building, testing or deli
 | Severity | critical / major / minor |
 | Services | |
 | Commit | |
-| Related | #issue, ADR-000X |
+| Related | #issue, ADR-NNNN |
 
 ## Summary
+
 Two or three sentences: what happened, its impact, the cause and the fix once known.
 
 ## Prediction
-For a planned break only: what you expected to happen and why.
+
+For a planned break only: what was expected and why.
 
 ## Timeline
+
 | Time (UTC) | Event |
 |---|---|
 
 ## Symptoms
+
 What was observed, where, and how it was noticed.
 
 ## Evidence
+
 Logs, trace IDs, event IDs, metrics and commands, pasted verbatim.
 
 ## Investigation
+
 | # | Hypothesis | How it was tested | Result |
 |---|---|---|---|
 
 ## Root cause
+
 The underlying cause, not the trigger.
 
 ## Resolution
-The fix, its pull request, and before/after measurements.
+
+The fix, its pull request, and before and after measurements.
 
 ## Lessons
-What worked, what to change. Every follow-up action is an issue.
+
+What worked and what to change, with every follow-up action as an issue.
 ```
