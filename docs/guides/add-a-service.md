@@ -18,10 +18,10 @@ How to add a service to Slot Gate, from its contract to a route through the gate
 
 3. Replace every sample value of the template, as the [template README](../../templates/spring-boot-service/README.md) lists.
 4. Take the next free port, and add the service to the component table of the root [`README.md`](../../README.md).
-5. If the service keeps state, add its database and role to `infrastructure/postgres/create-service-databases.sql`, then create them:
+5. If the service keeps state, add its role and database to `infrastructure/postgres/create-service-databases.sql`, then run only the new statements, because the script fails on roles that already exist:
 
    ```bash
-   psql -d postgres -f infrastructure/postgres/create-service-databases.sql
+   psql -d postgres -c "CREATE ROLE slotgate_<name> LOGIN PASSWORD 'slotgate_<name>'" -c "CREATE DATABASE slotgate_<name> OWNER slotgate_<name>" -c "REVOKE ALL ON DATABASE slotgate_<name> FROM PUBLIC"
    ```
 
 6. Add its route to `services/gateway-service/src/main/resources/application.yml`:
