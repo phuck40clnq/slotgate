@@ -32,10 +32,10 @@ body:
       label: Standard broken
       multiple: true
       options:
-        - coding standard (docs/rules/coding.md)
-        - Java standard (docs/rules/java.md)
-        - testing standard (docs/rules/testing.md)
-        - governance rules (docs/rules/governance.md)
+        - coding standard (docs/standards/coding.md)
+        - Java standard (docs/standards/java.md)
+        - testing standard (docs/standards/testing.md)
+        - governance rules (docs/standards/governance.md)
         - contract policies (contracts/)
         - contributing rules (CONTRIBUTING.md)
     validations:

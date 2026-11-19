@@ -109,10 +109,10 @@ Bad:   chore(user): update stuff and fix tests and refactor handler   (several c
 ## Standards
 
 Code in a pull request follows:
-- [Coding standard](docs/rules/coding.md)
-- [Java standard](docs/rules/java.md)
-- [Testing standard](docs/rules/testing.md)
-- [Governance rules](docs/rules/governance.md)
+- [Coding standard](docs/standards/coding.md)
+- [Java standard](docs/standards/java.md)
+- [Testing standard](docs/standards/testing.md)
+- [Governance rules](docs/standards/governance.md)
 - [Contract policies](contracts/README.md)
 
 Setup and commands are in the [README](README.md#getting-started).

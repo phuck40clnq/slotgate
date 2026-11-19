@@ -149,8 +149,8 @@ docker compose -f infrastructure/kafka/docker-compose.yml up -d
 
 - [PRD](docs/prd-2026-10-17.pdf) (Vietnamese)
 - [Contributing](CONTRIBUTING.md): issues, branches, commits and pull requests
-- [Coding](docs/rules/coding.md), [Java](docs/rules/java.md) and [testing](docs/rules/testing.md) standards
+- [Coding](docs/standards/coding.md), [Java](docs/standards/java.md) and [testing](docs/standards/testing.md) standards
 - [Documentation index](docs/README.md)
 - [Architecture overview](docs/architecture/overview.md)
 - [Architecture decision records](docs/adr/overview.md)
-- [Governance rules](docs/rules/governance.md)
+- [Governance rules](docs/standards/governance.md)

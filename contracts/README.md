@@ -168,7 +168,7 @@ For detailed documentation and architectural reasoning, see:
 
 - [docs/architecture/overview.md](./../docs/architecture/overview.md)
 - [docs/architecture/event-driven.md](./../docs/architecture/event-driven.md)
-- [docs/rules/governance.md](./../docs/rules/governance.md)
+- [docs/standards/governance.md](./../docs/standards/governance.md)
 
 Contracts define **what is exposed**.
 Documentation explains **why and how**.
