@@ -27,7 +27,7 @@ A new service is always copied from a template, never from another service. The 
 
 A service may use another language when the job justifies it. Before the first service in a new language:
 
-1. Record the decision in an [ADR](../docs/adr/overview.md).
+1. Record the decision in an [ADR](../docs/adr/README.md).
 2. Add the language baseline under `platform/<lang>/`: dependency versions and build configuration.
 3. Add `templates/<lang>-service/` with the same operational surface as the existing template: JSON logs with the shared field names, configuration from environment variables, health endpoint and README.
 

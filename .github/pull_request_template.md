@@ -33,7 +33,7 @@ Closes #
 
 ## How it was verified
 
-<!-- Exact commands and their results. Paste the relevant output, not just "tests pass". -->
+<!-- Exact commands and their results. Paste the relevant output, not only "tests pass". -->
 
 ```text
 $ ./mvnw verify
@@ -67,14 +67,14 @@ $ ./mvnw verify
 - [ ] The pull request changes at most 400 lines (excluding generated files), or is a stated mechanical change
 
 ### Code quality
-- [ ] Code follows the [coding](https://github.com/phuck40clnq/slotgate/blob/main/docs/rules/coding.md) and [Java](https://github.com/phuck40clnq/slotgate/blob/main/docs/rules/java.md) standards
+- [ ] Code follows the [coding](https://github.com/phuck40clnq/slotgate/blob/main/docs/standards/coding.md) and [Java](https://github.com/phuck40clnq/slotgate/blob/main/docs/standards/java.md) standards
 - [ ] No `TODO`/`FIXME`, dead code, commented-out code, empty stubs or placeholder files
 - [ ] No suppressed checks, or each suppression names the check and its reason on the same line
 - [ ] Everything this change replaces is removed (classes, configuration keys, dependencies, files, links)
 - [ ] Layering holds: domain imports no framework, adapters go through ports
 
 ### Tests
-- [ ] New or changed behaviour has tests that fail without this change ([testing standard](https://github.com/phuck40clnq/slotgate/blob/main/docs/rules/testing.md))
+- [ ] New or changed behaviour has tests that fail without this change ([testing standard](https://github.com/phuck40clnq/slotgate/blob/main/docs/standards/testing.md))
 - [ ] A bug fix includes a test that reproduces the bug
 - [ ] Adapters are tested against real infrastructure, concurrency-sensitive code has a concurrency test
 - [ ] `./mvnw verify` passes in every changed service, and coverage stays above the thresholds
@@ -102,6 +102,8 @@ $ ./mvnw verify
 - [ ] New dependencies are justified in this description and come from the platform BOM
 
 ### Documentation and decisions
+- [ ] No [core rule](https://github.com/phuck40clnq/slotgate/blob/main/docs/core/rules.md) is broken, or an accepted ADR changes it first
+- [ ] Every changed document follows the [documentation standard](https://github.com/phuck40clnq/slotgate/blob/main/docs/README.md)
 - [ ] READMEs, architecture docs and `.env.example` reflect the change
 - [ ] Architectural decisions have an ADR in `docs/adr/`, linked above
 - [ ] A failure found while working is recorded in `docs/incidents/` or as an issue

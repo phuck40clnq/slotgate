@@ -197,7 +197,7 @@ For detailed frontend architecture and rules, see:
 ### Frontend Architecture
 
 ### Governance & Design Rules
-- [General Coding Standards](./../../docs/rules/governance.md)
+- [General Coding Standards](./../../docs/standards/coding.md)
 
 ### Internal Error System
 For deeper understanding of the error abstraction layer:

@@ -22,7 +22,7 @@ This standard applies to all code in the repository, in every language. Rules us
 Related standards:
 - [java.md](./java.md) - Java and Spring specifics
 - [testing.md](./testing.md) - Test strategy and rules
-- [governance.md](./governance.md) - Architectural invariants
+- [core rules](../core/rules.md) - Architectural invariants
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) - Commits, branches and pull requests
 
 ---

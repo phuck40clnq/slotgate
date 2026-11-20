@@ -1,132 +1,56 @@
-# System Architecture Overview
+# Architecture overview
 
-## Table of contents
-- [Architectural Style](#architectural-style)
-- [System Components](#system-components)
-- [Interaction Model](#interaction-model)
-    - [Synchronous Communication](#synchronous-communication)
-    - [Asynchronous Communication](#asynchronous-communication)
-    - [Rules](#rules)
-- [Service Boundaries](#service-boundaries)
-- [Data Ownership Model](#data-ownership-model)
-- [Scalability and Evolution](#scalability-and-evolution)
-- [Architectural Constraints](#architectural-constraints)
+How the components of Slot Gate work together today, for anyone changing more than one of them. Each component's README holds its own details.
 
----
+## Components and connections
 
-## Architectural Style
+```mermaid
+flowchart LR
+    client([Web client]) -->|/api/...| gateway[gateway-service :8080]
+    gateway -->|/api/v1/auth| auth[auth-service :8082]
+    gateway -->|/api/v1/user| user[user-service :8083]
+    gateway -->|/api/v1/seat-inventory| seats[seat-inventory-service :8084]
+    gateway -->|/api/v1/test| test[test-service :6868]
+    gateway -.->|JWKS| auth
+    auth -->|UserRegistered, UserLoggedIn| kafka{{Kafka and Schema Registry}}
+    kafka -->|UserRegistered| user
+    auth --- authdb[(slotgate_auth)]
+    user --- userdb[(slotgate_user)]
+    seats --- seatsdb[(slotgate_seat_inventory)]
+```
 
-The system follows an **Microservices architecture with Event-Driven integration**.
+## Request path
 
-Primary goals:
-- Independent service deployment
-- Clear domain boundaries
-- Loose coupling between services
-- Horizontal scalability
-- Contract-driven communication
+1. A client calls the gateway at `/api/<service>/...`.
+2. The gateway verifies the JWT against the JWKS that `auth-service` serves at `/oauth2/jwks`, except on `/api/auth/**` and `/api/test/**`.
+3. The gateway sets `X-Internal-User-Id` to the subject of the token, rewrites the path to `/api/v1/<service>/...` and forwards the request.
+4. The service reads the caller only from `X-Internal-User-Id`, following CORE-12, and answers errors in the format of [the error contract](../../contracts/openapi/error/README.md).
 
-*Synchronous communication* is used when immediate responses are required.
+## Events
 
-*Asynchronous messaging* is the primary integration mechanism between services.
+Events are Avro records, registered in Schema Registry and defined in [`contracts/avro/`](../../contracts/avro/README.md).
 
----
+| Event | Topic | Producer | Consumers |
+|---|---|---|---|
+| `UserRegistered` | `auth-user-events` | `auth-service` | `user-service` |
+| `UserLoggedIn` | `auth-security-events` | `auth-service` | None |
+| Any | `auth-auth-events` | None in this repository | `auth-service` |
 
-## System Components
+## Data
 
-The system consists of:
+Each service with state owns one PostgreSQL database and role, following CORE-10:
 
-- **API Gateway**: Single entry point for clients.
-- **Authentication Service**: Manages identity and access control.
-- **Domain Services**: Encapsulate business logic and domain ownership.
-- **Message Infrastructure**: Enables asynchronous communication between services.
-- **Service-Owned Data Stores** (per service): Each service owns its data store.
+| Service | Database | Schema changes |
+|---|---|---|
+| `auth-service` | `slotgate_auth` | Generated from the entities at start-up; only validated in `prod` |
+| `user-service` | `slotgate_user` | Generated from the entities at start-up; only validated in `prod` |
+| `seat-inventory-service` | `slotgate_seat_inventory` | Versioned migrations |
 
-Each component has a clearly defined responsibility and ownership boundary.
+`gateway-service` and `test-service` keep no state.
 
----
+## Details
 
-## Interaction Model
-
-Two communication patterns are supported:
-
-### Synchronous Communication
-
-Client &rarr; Gateway &rarr; Service
-
-Used for:
-- Queries
-- Immediate response requirements
-
----
-
-### Asynchronous Communication
-
-Service &rarr; Publish Event &rarr; Message Infrastructure &rarr; Subscriber Services
-
-Used for:
-- State propagation
-- Cross-service reactions
-- Long-running workflows
-
----
-
-### Rules
-
-- No shared database
-- No direct cross-service data access
-- All communication happens through APIs or events
-
----
-
-## Service Boundaries
-
-Each service:
-- Owns its domain logic
-- Owns its database
-- Defines its public API contract
-- Publishes domain events on state changes
-- Consumes only relevant events 
-
-Cross-service communication must **only** occur via:
-- HTTP APIs (synchronous queries or commands)
-- Events (asynchronous state propagation)
-
----
-
-## Data Ownership Model
-
-The architecture enforces strict data ownership:
-- No shared persistence layer
-- No cross-service joins
-- No direct database integration
-
-The system operates under an **eventual consistency** model.
-
-Each service is the single source of truth for its domain.
-
----
-
-## Scalability and Evolution
-
-The architecture supports:
-- Independent service scaling
-- Independent deployment cycles
-- Multi-language service implementation
-- Infrastructure evolution with minimal systemic impact
-- Gradual adoption of advanced patterns (e.g. Saga, CQRS)
-
-Stateless services are preferred.
-
-State is stored exclusively within owned data stores.
-
----
-
-## Architectural Constraints
-
-The system follows these architectural constraints:
-
-- Public APIs are contract-driven
-- Events are shared and immutable
-- Event contracts are centrally governed and version-controlled
-- Breaking changes require formal architectural decisions
-- Backward compatibility is preferred
+- [Gateway](gateway.md)
+- [Authentication](authentication.md)
+- [Event-driven communication](event-driven.md)
+- [Architecture decision records](../adr/README.md)

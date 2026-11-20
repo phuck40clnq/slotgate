@@ -80,7 +80,7 @@ Examples:
 
 For system-level architecture and design decisions:
 - [Architecture Overview](../docs/architecture/overview.md)
-- [Architecture Decision Records (ADR)](../docs/adr/overview.md)
+- [Architecture Decision Records (ADR)](../docs/adr/README.md)
 
 ---
 

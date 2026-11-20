@@ -1,129 +1,49 @@
 # Slot Gate
 
-A high-load course registration platform for multiple universities. Slot Gate runs alongside each university's academic management system and keeps registration available and correct when tens of thousands of students arrive the moment registration opens: no crashes, no overselling.
+The repository of Slot Gate, a course registration platform shared by many schools, for anyone who builds or runs it. Slot Gate runs on simulated data based on public regulations and holds no real personal data.
 
-> **Learning project.** Slot Gate runs on simulated data based on publicly available academic regulations. It is not used for any real university's registration and contains no real personal data.
+## Start here
 
-Course project for *Technology Project* (Dự án Công nghệ) 2026 at VNU University of Engineering and Technology, and the groundwork for a graduation thesis.
+1. [Product](docs/core/product.md): what Slot Gate is, who uses it and the targets it is measured against
+2. [Core rules](docs/core/rules.md): what no change may break
+3. [Documentation standard](docs/README.md): which documents exist, when they are written and how
 
-## Problem
+## Components
 
-Course registration at many Vietnamese universities slows down or crashes in the first minutes after opening (sources in the [PRD](docs/prd-2026-10-17.pdf)). Slot Gate addresses the technical side: staying available under the opening spike and allocating seats correctly. It does not create seats; a shortage of class sections is a separate problem.
-
-## Goals
-
-1. **No overselling, fair ordering**, even under concurrent requests.
-2. **Withstand the opening spike** with measurable latency.
-3. **One platform, many universities**: each university declares its rules in a versioned configuration schema.
-4. **Tenant isolation**: a busy university does not slow down the others.
-5. **Explainable and debuggable**: every decision can be explained ("why was I rejected?"), and every incident can be investigated with traces, logs and metrics.
-
-**Non-goals:** replacing the academic management system (student records, prerequisites and tuition stay there), creating seats or scheduling classes, production use for any real university, and a full-featured UI (the web client is the minimum needed to operate and observe the system).
-
-## Targets
-
-| Requirement | Target |
-|---|---|
-| Opening spike | 20,000 students, 90% of requests within the first 60 s |
-| Request acknowledgement | p99 < 300 ms |
-| Seat count and queue position updates | < 2 s |
-| Correctness | 0 oversold seats; exactly one final outcome per request, including retries |
-| Integration failures | A slow or unavailable university system never loses an accepted registration |
-| Tenant isolation | Load on one university does not push another's p99 above target |
-
-These are draft targets set by the author, not measured from any real university. They will be calibrated after the first measurements, and a new service is split out only when a target is violated.
-
-## Architecture (planned)
-
-Heavy rules are evaluated ahead of time on the **cold path**. At opening time, the **hot path** only reserves a seat in the seat inventory and publishes an event; everything else reacts asynchronously.
-
-```mermaid
-flowchart TD
-    subgraph cold["Cold path: before opening"]
-        cfg["Per-university config"]
-        elig["Precomputed eligibility"]
-    end
-
-    subgraph hot["Hot path: at opening"]
-        student(["Student"]) --> gate["Gate and virtual waiting room"]
-        gate --> inv[("Seat inventory<br/>strongly consistent")]
-    end
-
-    uni["University system<br/>(out of scope)"]
-
-    cfg --> gate
-    uni --> elig
-    elig --> inv
-    inv --> bus{{"Event stream (Kafka)"}}
-    bus --> waitlist["Waitlist"]
-    bus --> push["Real-time updates"]
-    bus --> decisions["Decision log"]
-    bus --> sync["Sync to university"]
-    sync --> uni
-```
-
-Tenancy starts as one shared deployment with per-university quotas and queues, designed so that a large university can later move to a dedicated deployment (cell model).
-
-## Current state
-
-The code and documentation are bootstrapped from [LearnEventDrivenArchitecture](https://github.com/phuck40clnq/LearnEventDrivenArchitecture), the author's earlier project, at commit `efff362`. Its history is not carried over. Starting point:
-
-| Component | What it does |
-|---|---|
-| [`gateway-service`](services/gateway-service/README.md) | Spring Cloud Gateway: routing, JWT verification via JWKS, identity propagation, unified error responses |
-| [`auth-service`](services/auth-service/README.md) | Registration, login, RS256 JWT issuance, JWKS endpoint; publishes `UserRegistered` and `UserLoggedIn` |
-| [`user-service`](services/user-service/README.md) | User profiles; consumes `UserRegistered` |
-| [`seat-inventory-service`](services/seat-inventory-service/README.md) | Sections and seats: holds that never exceed capacity, proven under concurrency |
-| `test-service` | Sandbox for routing, contract and event experiments |
-| [`contracts/`](contracts/README.md) | OpenAPI and Avro contracts, the source of truth between services |
-| [`platform/java/`](platform/README.md) | Shared Maven BOM and parent POM |
-| [`templates/`](templates/README.md) | Spring Boot service template |
-| [`frontend/web/`](frontend/web/README.md) | Vanilla JS client: login, registration, profile |
-
-Not in place yet: container images, seat hold expiry and confirmation, waiting room, rate limiting (the gateway filter is an empty stub), idempotent consumers, retry and dead-letter handling, outbox, tracing across Kafka, load tests, and automated tests in gateway, auth and user beyond context loading.
-
-## Roadmap
-
-| Phase | Scope | Exit criterion |
+| Component | Port | What it does |
 |---|---|---|
-| 1. Fault-tolerant core | Seat inventory without overselling, idempotency, retry and dead-letter, outbox | Every failure scenario has before/after measurements |
-| 2. Multi-tenancy | Versioned config schema, tenant isolation, hot/cold path split | Two simulated universities with different rules run side by side without affecting each other |
-| 3. Observability and investigation | Tracing across Kafka, realistic load simulation, post-mortems | Root-cause an incident staged by someone else, without prior knowledge of it |
-| 4. Wrap-up | Before/after data, final report, thesis directions | |
+| [`gateway-service`](services/gateway-service/README.md) | 8080 | The only public entry: routing, JWT verification, identity headers, unified errors |
+| [`auth-service`](services/auth-service/README.md) | 8082 | Registration, login, RS256 JWT issuance and JWKS; publishes `UserRegistered` and `UserLoggedIn` |
+| [`user-service`](services/user-service/README.md) | 8083 | User profiles; consumes `UserRegistered` |
+| [`seat-inventory-service`](services/seat-inventory-service/README.md) | 8084 | Sections and seat holds that never exceed capacity, with confirmation and expiry |
+| [`test-service`](services/test-service/README.md) | 6868 | Sandbox for routing, contract and event experiments |
+| [`frontend/web/`](frontend/web/README.md) | | Web client: login, registration, profile |
+| [`contracts/`](contracts/README.md) | | OpenAPI and Avro contracts between services and clients |
+| [`platform/`](platform/README.md) | | Shared build baseline per language |
+| [`templates/`](templates/README.md) | | Starting point for a new service per language |
+| [`infrastructure/postgres/`](infrastructure/postgres/README.md) | 5432 | One PostgreSQL database and role per service |
+| [`infrastructure/kafka/`](infrastructure/kafka/README.md) | 9092, 8081, 2181 | Kafka, Schema Registry and ZooKeeper |
 
-Phase lengths will be fixed once the course milestones are known. Each week follows one loop: write a prediction, break the system to reproduce it, fix it with one pattern, record an ADR, measure before and after.
-
-## Repository structure
-
-```text
-.
-├── contracts/        # OpenAPI and Avro contracts
-├── docs/             # PRD, architecture, ADRs, rules
-├── frontend/web/     # Minimal web client
-├── infrastructure/   # Local infrastructure (PostgreSQL setup, Kafka)
-├── platform/java/    # Shared Maven BOM and parent POM
-├── services/         # Backend services
-└── templates/        # Service templates
-```
+How the components work together is in the [architecture overview](docs/architecture/overview.md). A new service takes the next free port and is added to this table.
 
 ## Getting started
 
-Requirements: Java 21, Maven 3.9+, PostgreSQL 14+ on `localhost:5432`. Docker with Compose is needed only to run Kafka.
+Requirements: Java 21, Maven 3.9 or later, and PostgreSQL 14 or later on `localhost:5432`. Docker with Compose is needed only to run Kafka.
 
-1. Install the shared POMs. Services inherit from `platform/java`, which is not published to any repository:
+1. Install the shared build files, which services inherit and no repository publishes:
 
    ```bash
    mvn -f platform/java/java-bom/pom.xml install
    mvn -f platform/java/java-parent/pom.xml install
    ```
 
-2. Create one database and role per service (run once, see [`infrastructure/postgres/`](infrastructure/postgres/README.md)):
+2. Create one database and role per service, once:
 
    ```bash
    psql -d postgres -f infrastructure/postgres/create-service-databases.sql
    ```
 
-3. Generate the JWT key pair for auth-service (run once per machine; both files stay out of Git):
+3. Generate the JWT key pair of `auth-service`, once per machine; both files stay out of git:
 
    ```bash
    cd services/auth-service/src/main/resources/keys
@@ -139,18 +59,20 @@ Requirements: Java 21, Maven 3.9+, PostgreSQL 14+ on `localhost:5432`. Docker wi
    SPRING_PROFILES_ACTIVE=local OAUTH_JWK_SET_URI=http://localhost:8082/oauth2/jwks ./mvnw spring-boot:run
    ```
 
-Services start without Kafka, but events are not delivered. To run it:
+5. Start Kafka, Schema Registry and ZooKeeper for the services that publish or consume events:
 
-```bash
-docker compose -f infrastructure/kafka/docker-compose.yml up -d
-```
+   ```bash
+   docker compose -f infrastructure/kafka/docker-compose.yml up -d
+   ```
 
 ## Documentation
 
-- [PRD](docs/prd-2026-10-17.pdf) (Vietnamese)
 - [Contributing](CONTRIBUTING.md): issues, branches, commits and pull requests
-- [Coding](docs/rules/coding.md), [Java](docs/rules/java.md) and [testing](docs/rules/testing.md) standards
-- [Documentation index](docs/README.md)
-- [Architecture overview](docs/architecture/overview.md)
-- [Architecture decision records](docs/adr/overview.md)
-- [Governance rules](docs/rules/governance.md)
+- [Standards](docs/standards/): coding, Java and testing
+- [Architecture decision records](docs/adr/README.md)
+- [Incidents](docs/incidents/README.md)
+- [Product requirements](docs/prd-2026-10-17.pdf), in Vietnamese, as first agreed with the supervisor
+
+## Origin
+
+Slot Gate is the course project of Technology Project (Dự án Công nghệ) 2026 at VNU University of Engineering and Technology. Its code and documents started from [LearnEventDrivenArchitecture](https://github.com/phuck40clnq/LearnEventDrivenArchitecture) at commit `efff362`, without that history.
