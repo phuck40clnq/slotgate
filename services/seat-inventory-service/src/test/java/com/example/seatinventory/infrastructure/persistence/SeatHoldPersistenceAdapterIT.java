@@ -168,6 +168,27 @@ class SeatHoldPersistenceAdapterIT extends PostgresIntegrationTest {
             .doesNotContain(sectionWithRunningHold);
     }
 
+    @Test
+    void findsTheConfirmedHoldsAndTheHoldsWithTimeLeftOfAStudent() {
+        UUID studentId = UUID.randomUUID();
+        SeatHold timeLeft = savedHoldOf(studentId, EXPIRES_AT.plusSeconds(1));
+        SeatHold confirmed = savedHoldOf(studentId, EXPIRES_AT);
+        seatHolds.confirm(confirmed.id(), HELD_AT);
+        savedHoldOf(studentId, EXPIRES_AT);
+        markExpired(savedHoldOf(studentId, EXPIRES_AT.plusSeconds(1)).id());
+        seatHolds.saveIfAbsent(holdOf(openSection(), EXPIRES_AT.plusSeconds(1)));
+
+        assertThat(seatHolds.findCurrentHolds(studentId, EXPIRES_AT))
+            .containsExactlyInAnyOrder(timeLeft, confirmed.confirmed());
+    }
+
+    private SeatHold savedHoldOf(UUID studentId, Instant expiresAt) {
+        SeatHold seatHold =
+            new SeatHold(UUID.randomUUID(), openSection(), studentId, HELD_AT, expiresAt, SeatHoldStatus.HELD);
+        seatHolds.saveIfAbsent(seatHold);
+        return seatHold;
+    }
+
     private SeatHold holdOf(UUID sectionId, Instant expiresAt) {
         return new SeatHold(UUID.randomUUID(), sectionId, UUID.randomUUID(), HELD_AT, expiresAt, SeatHoldStatus.HELD);
     }

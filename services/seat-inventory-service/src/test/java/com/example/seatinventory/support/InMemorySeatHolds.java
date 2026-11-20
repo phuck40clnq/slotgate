@@ -45,6 +45,15 @@ public class InMemorySeatHolds implements SeatHoldRepositoryPort {
     }
 
     @Override
+    public List<SeatHold> findCurrentHolds(UUID studentId, Instant now) {
+        return seatHolds.values().stream()
+            .filter(seatHold -> seatHold.studentId().equals(studentId))
+            .filter(seatHold -> seatHold.isConfirmed()
+                || seatHold.status() == SeatHoldStatus.HELD && seatHold.expiresAt().isAfter(now))
+            .toList();
+    }
+
+    @Override
     public boolean confirm(UUID holdId, Instant now) {
         SeatHold seatHold = seatHolds.get(holdId);
         boolean isConfirmable = seatHold != null

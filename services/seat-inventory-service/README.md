@@ -15,6 +15,7 @@ The contract is [seat-inventory.openapi.yaml](../../contracts/openapi/seat-inven
 | `GET /api/v1/seat-inventory/sections/{sectionId}` | Read a section and the seats left | `404 SECTION_NOT_FOUND` |
 | `POST /api/v1/seat-inventory/sections/{sectionId}/holds` | Hold one seat for the student in `X-Internal-User-Id` until `expiresAt`: `201` for a new hold, `200` with the existing hold when the student asks again | `404 SECTION_NOT_FOUND`, `409 SECTION_FULL` |
 | `POST /api/v1/seat-inventory/sections/{sectionId}/holds/{holdId}/confirmation` | Confirm the student's hold before it expires, so the seat stays theirs: `200`, also when confirmed again | `404 HOLD_NOT_FOUND`, `409 HOLD_EXPIRED` |
+| `GET /api/v1/seat-inventory/me/holds` | List the current holds of the student in `X-Internal-User-Id` with the code and title of their section, ordered by code: confirmed holds, and held ones until their `expiresAt` | |
 
 Health and metrics are at `/actuator/health` and `/actuator/metrics`.
 

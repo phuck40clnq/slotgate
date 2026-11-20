@@ -25,6 +25,13 @@ public interface SeatHoldRepositoryPort {
     Optional<SeatHold> findHold(UUID holdId);
 
     /**
+     * Finds the holds of a student that are current at {@code now}: confirmed, or held and before their expiry.
+     * A held hold whose time is up is left out even before the sweep expires it, since it can no longer be
+     * confirmed.
+     */
+    List<SeatHold> findCurrentHolds(UUID studentId, Instant now);
+
+    /**
      * Confirms the hold if it is still held and has not expired at {@code now}. Atomic: of concurrent
      * confirmations and expiries of one hold, exactly one changes it.
      *

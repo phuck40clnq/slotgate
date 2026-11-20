@@ -44,6 +44,11 @@ class CheckThenWriteSeatHolds implements SeatHoldRepositoryPort {
     }
 
     @Override
+    public List<SeatHold> findCurrentHolds(UUID studentId, Instant now) {
+        return seatHolds.findCurrentHolds(studentId, now);
+    }
+
+    @Override
     public boolean confirm(UUID holdId, Instant now) {
         SeatHold seatHold = findHold(holdId).orElseThrow();
         if (seatHold.status() != SeatHoldStatus.HELD || !seatHold.expiresAt().isAfter(now)) {

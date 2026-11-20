@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -52,6 +53,25 @@ public class SeatInventoryPersistenceAdapter implements SeatInventoryPort {
     @Override
     public List<Section> listSections() {
         return jdbcClient.sql("SELECT id, code, title, capacity, reserved_seats FROM section ORDER BY code")
+            .query((row, rowNumber) -> toSection(row))
+            .list();
+    }
+
+    /**
+     * Returns early on no ids, since an empty IN list is not valid SQL.
+     */
+    @Override
+    public List<Section> findSections(Set<UUID> sectionIds) {
+        if (sectionIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbcClient.sql("""
+                SELECT id, code, title, capacity, reserved_seats
+                FROM section
+                WHERE id IN (:ids)
+                ORDER BY code
+                """)
+            .param("ids", sectionIds)
             .query((row, rowNumber) -> toSection(row))
             .list();
     }

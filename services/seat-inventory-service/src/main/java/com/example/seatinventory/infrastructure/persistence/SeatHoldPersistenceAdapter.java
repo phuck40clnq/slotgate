@@ -73,6 +73,24 @@ public class SeatHoldPersistenceAdapter implements SeatHoldRepositoryPort {
     }
 
     /**
+     * The status filter repeats the predicate of the partial index of migration V6 word for word, so that
+     * PostgreSQL proves the index applies and reads only the student's entries.
+     */
+    @Override
+    public List<SeatHold> findCurrentHolds(UUID studentId, Instant now) {
+        return jdbcClient.sql("""
+                SELECT id, section_id, student_id, held_at, expires_at, status
+                FROM seat_hold
+                WHERE student_id = :studentId AND status IN ('HELD', 'CONFIRMED')
+                    AND (status = 'CONFIRMED' OR expires_at > :now)
+                """)
+            .param("studentId", studentId)
+            .param("now", toTimestamp(now))
+            .query((row, rowNumber) -> toSeatHold(row))
+            .list();
+    }
+
+    /**
      * Check and change are one statement. When two statements change the same hold, the second waits for the
      * row lock, then PostgreSQL re-evaluates its WHERE clause on the committed row: the hold is no longer HELD,
      * so it changes nothing. See ADR-0007.

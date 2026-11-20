@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,23 @@ class SeatInventoryPersistenceAdapterIT extends PostgresIntegrationTest {
         assertThat(sections)
             .filteredOn(section -> section.code().startsWith("LIST-"))
             .containsExactly(earlier, later);
+    }
+
+    @Test
+    void findsTheGivenSectionsByCodeLeavingOutUnknownIds() {
+        Section later = save(new Section(UUID.randomUUID(), "FIND-B", "Found second", 5, 1));
+        Section earlier = save(new Section(UUID.randomUUID(), "FIND-A", "Found first", 5, 0));
+        openSection(5, 0);
+        UUID unknownId = UUID.fromString("00000000-0000-0000-0000-0000000000ff");
+
+        List<Section> sections = seatInventory.findSections(Set.of(later.id(), earlier.id(), unknownId));
+
+        assertThat(sections).containsExactly(earlier, later);
+    }
+
+    @Test
+    void findsNoSectionForNoId() {
+        assertThat(seatInventory.findSections(Set.of())).isEmpty();
     }
 
     @Test

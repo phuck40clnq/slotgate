@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.example.seatinventory.application.port.out.SeatInventoryPort;
@@ -34,6 +35,13 @@ public class InMemorySeatInventory implements SeatInventoryPort {
     public List<Section> listSections() {
         return sections.values().stream()
             .sorted(Comparator.comparing(Section::code))
+            .toList();
+    }
+
+    @Override
+    public List<Section> findSections(Set<UUID> sectionIds) {
+        return listSections().stream()
+            .filter(section -> sectionIds.contains(section.id()))
             .toList();
     }
 
