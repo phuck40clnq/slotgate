@@ -91,8 +91,9 @@ public class SeatHoldPersistenceAdapter implements SeatHoldRepositoryPort {
     }
 
     /**
-     * Reads every held hold, since no index covers expires_at yet: the cost of this scan under load is what
-     * ADR-0007 still has to measure.
+     * Served by the partial index of migration V5, so it reads only the held holds that expired. The status stays a
+     * literal that repeats the predicate of that index: with a bind parameter, a cached generic plan could not use
+     * it. See ADR-0008.
      */
     @Override
     public List<UUID> findSectionsWithExpiredHolds(Instant now) {
