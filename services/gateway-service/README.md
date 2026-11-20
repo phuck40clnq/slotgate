@@ -16,6 +16,7 @@ CORE-12 makes the gateway the only public entry, so token checks, identity, cros
 | `/api/test/**` | `test-service` at `/api/v1/test/**` | Not required |
 
 - Token checks and the `X-Internal-User-Id` header work as [authentication](../../docs/architecture/authentication.md) describes.
+- `GET /actuator/health` answers without a token; every other management path needs one.
 - Every error, including token, routing and network errors, is answered as an `ErrorResponse`, with `traceId` taken from the `X-Trace-Id` request header, or `N/A` without it.
 - Cross-origin requests are accepted from `http://localhost:3000`, with the methods `GET`, `POST`, `PUT`, `DELETE` and `OPTIONS`, the headers `Authorization` and `Content-Type`, and credentials.
 - The gateway publishes and consumes no event.
@@ -45,7 +46,7 @@ cd services/gateway-service
 ./mvnw verify
 ```
 
-The service has no automated tests.
+`SecurityConfigIT` starts the gateway on a random port and checks that `GET /actuator/health` answers without a token; no other service needs to run.
 
 ## Details
 

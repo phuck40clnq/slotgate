@@ -43,7 +43,7 @@ sequenceDiagram
 ## Verification at the gateway
 
 - The gateway checks the signature against the key set at `OAUTH_JWK_SET_URI`, the expiry, and the audience `gateway`. It does not check the issuer.
-- Every `OPTIONS` request, and every request to `/api/auth/**`, `/api/test/**` or `/public/**`, passes without a token.
+- Every `OPTIONS` request, `GET /actuator/health`, and every request to `/api/auth/**`, `/api/test/**` or `/public/**`, passes without a token.
 - Any other request without a valid token is rejected with `401`.
 - On a request with a valid token, the gateway sets `X-Internal-User-Id` to the `sub` claim, replacing any value the client sent.
 

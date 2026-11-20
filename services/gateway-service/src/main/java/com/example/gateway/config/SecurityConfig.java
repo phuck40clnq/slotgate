@@ -28,6 +28,7 @@ public class SecurityConfig {
 
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers(HttpMethod.OPTIONS).permitAll()
+                .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                 .pathMatchers("/api/auth/**").permitAll()
                 .pathMatchers("/public/**").permitAll() // TODO: [LATER] Fix security config (remove public api)
                 .pathMatchers("/api/test/**").permitAll()
