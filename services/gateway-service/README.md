@@ -46,7 +46,10 @@ cd services/gateway-service
 ./mvnw verify
 ```
 
-`SecurityConfigIT` starts the gateway on a random port and checks that `GET /actuator/health` answers without a token; no other service needs to run.
+The integration tests start the gateway on a random port, with stand-ins for `auth-service` and the services it routes to, so no other service needs to run:
+
+- `SecurityConfigIT`: `GET /actuator/health` answers without a token
+- `IdentityPropagationFilterIT`: a service receives the token subject in `X-Internal-User-Id`, never a value the client sent
 
 ## Details
 
