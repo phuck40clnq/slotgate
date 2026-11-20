@@ -46,6 +46,7 @@ sequenceDiagram
 - Every `OPTIONS` request, `GET /actuator/health`, and every request to `/api/auth/**`, `/api/test/**` or `/public/**`, passes without a token.
 - Any other request without a valid token is rejected with `401`.
 - On a request with a valid token, the gateway sets `X-Internal-User-Id` to the `sub` claim, replacing any value the client sent.
+- On a request to `/api/auth/**` or `/api/test/**`, which needs no token, the gateway removes any `X-Internal-User-Id` the client sent.
 
 ## In the services
 

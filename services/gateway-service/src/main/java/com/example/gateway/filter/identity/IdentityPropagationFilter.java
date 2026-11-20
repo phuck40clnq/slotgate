@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
  *   </li>
  *   <li>
  *     Ensure the request is authenticated
- *     If route is public, it will skip and return rightaway
+ *     If route is public, it only removes the identity header that the client sent
  *   </li>
  *   <li>
  *     Extract identity information from the authentication token
@@ -99,7 +99,8 @@ public class IdentityPropagationFilter
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         if (skipRouteMatcher.shouldSkip(exchange)) {
-            return chain.filter(exchange);
+            // A client must not choose its own identity, even on a route that needs none (API-16).
+            return chain.filter(withoutIdentity(exchange));
         }
 
         return exchange.getPrincipal()
@@ -133,6 +134,12 @@ public class IdentityPropagationFilter
          * Return the value gt SecurityWebFilterChain (-100)
          */
         return FilterOrder.IDENTITY_PROPAGATION.value();
+    }
+
+    private static ServerWebExchange withoutIdentity(ServerWebExchange exchange) {
+        return exchange.mutate()
+                .request(request -> request.headers(headers -> headers.remove(HeaderConstants.X_INTERNAL_User_Id)))
+                .build();
     }
 
 }
