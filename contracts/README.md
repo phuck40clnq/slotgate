@@ -1,174 +1,25 @@
 # Contracts
 
-## Table of contents
-- [Overview](#overview)
-- [Purpose](#purpose)
-- [Structure](#structure)
-- [Avro – Event Contracts](#avro---event-contracts)
-- [OpenAPI – REST Contracts](#openapi--rest-contracts)
-- [Contract Governance](#contract-governance)
-- [Contracts First](#contracts-first)
-- [Authoritative Contracts](#contracts-are-authoritative)
-- [Backward Compatibility](#backward-compatibility)
-- [When to Update Contracts](#when-to-update-contracts)
-- [More Information](#more-information)
+The HTTP and event contracts between the services of Slot Gate and their clients, for anyone who changes an API or an event. Code follows these files, never the reverse, as CORE-08 and CORE-09 require.
 
----
+## Why it exists
 
-## Overview
+Services share no code and may use different languages, so these language-neutral files are the only shared definition of what they exchange. A service generates or checks its types against them.
 
-The `contracts` module defines all cross-service communication contracts in the system.
+## API and events
 
-This module acts as the single source of truth for:
-- Service-to-service communication
-- Gateway-to-service REST contracts
-- Event-driven messaging schemas
+| Folder | Holds | Rules |
+|---|---|---|
+| `openapi/<service>/` | One OpenAPI 3 file per service | [API standard](../docs/standards/api.md) |
+| `openapi/error/` | The `ErrorResponse` that every error response uses | API-17 to API-21 |
+| `avro/<owning service>/events/` | One Avro schema per event | [Event standard](../docs/standards/events.md) |
 
-No service should define its own public contract outside this module.
+## Details
 
----
+A contract changes in this order:
 
-## Purpose
-
-**This module ensures**:
-- Strong schema versioning
-- Explicit ownership of API definitions
-- Independent service evolution
-- Safe refactoring
-- Clear boundary definitions
-- Stable integration across services
-
-Contracts define system boundaries.
-
-Implementations must comply with them.
-
----
-
-## Structure
-```code
-contracts
-├── README.md
-├── avro/      # Event schemas
-└── openapi/   # HTTP API contracts
-```
-
----
-
-### Avro - Event Contracts
-
-Contains **event contracts for asynchronous communication between services**.
-
-These contracts define the structure of messages exchanged through the event-driven system.
-
-They describe:
-- The shape of domain events
-- The data exposed to other services
-- The public event interface of a service
-
-This layer represents the asynchronous boundary of the system.
-
-Services use these contracts when:
-- Publishing domain events
-- Consuming events from other services
-- Reacting to state changes across bounded contexts
-
-**Avro contracts ensure**:
-- Schema consistency
-- Controlled evolution of events
-- Safe inter-service messaging
-- Compatibility enforcement
-
-### OpenAPI – REST Contracts
-
-Contains **HTTP API contracts for synchronous communication**.
-
-These contracts define the structure of REST requests and responses exposed by services.
-
-They describe:
-- Public endpoints
-- Request/response formats
-- Shared error structures
-- Standard headers (when applicable)
-
-This layer represents the synchronous boundary of the system.
-
-Services use these contracts when:
-- Exposing APIs through the Gateway
-- Communicating over HTTP
-- Integrating with external clients
-
-OpenAPI contracts ensure:
-- Predictable service interfaces
-- Clear API ownership
-- Safe evolution of REST endpoints
-
----
-
-## Contract Governance
-
-### Contracts First
-Before implementing a feature that crosses service boundaries:
-1. Define the OpenAPI or Avro schema
-2. Review structure and ownership
-3. Validate compatibility impact
-
-Implementation must follow contract — not the other way around.
-
----
-
-### Contracts are authoritative.
-Changes to:
-- `services/*`
-- `frontend/*`
-- `infrastructure/messaging`
-- Event producers or consumers
-
-must update the relevant contract definitions.
-
-If behavior changes externally, contracts must reflect it.
-
----
-
-### Backward Compatibility
-#### OpenAPI
-- Do not remove fields without versioning
-- Do not change response shape incompatibly
-- Avoid changing status code semantics
-- Prefer additive changes
-
-#### Avro
-- Follow schema evolution best practices
-- Prefer adding optional fields
-- Avoid removing required fields
-- Maintain compatibility strategy
-
-#### Breaking changes require:
-- Explicit versioning
-- Migration strategy
-- Documentation update
-- Consumer impact analysis
-
----
-
-## When to Update Contracts
-Contracts must be updated when:
-- A new API endpoint is introduced
-- A response model changes
-- An event schema is added
-- An event payload structure changes
-- Header requirements are modified
-- Error response structure evolves
-
-*Contracts are part of the change — not an afterthought.*
-
----
-
-## More Information
-For detailed documentation and architectural reasoning, see:
-
-- [docs/architecture/overview.md](./../docs/architecture/overview.md)
-- [docs/architecture/event-driven.md](./../docs/architecture/event-driven.md)
-- [docs/core/rules.md](./../docs/core/rules.md)
-
-Contracts define **what is exposed**.
-Documentation explains **why and how**.
+1. Change the file here, in the same pull request as the code and before it.
+2. Check the change against the compatibility rules: API-22 to API-25, or EVT-14 and EVT-15.
+3. Mark a breaking change with `!` and a `BREAKING CHANGE:` footer in the commit message.
+4. Copy a changed schema unchanged into every service that keeps a copy, as EVT-09 requires.
+5. Change the code that produces and consumes it.

@@ -1,146 +1,141 @@
-# Java Standard
+# Java standard
 
-## Table of contents
-- [Scope](#scope)
-- [Package layout](#package-layout)
-- [Language](#language)
-- [Null handling](#null-handling)
-- [Lombok](#lombok)
-- [Time, identifiers and randomness](#time-identifiers-and-randomness)
-- [Spring](#spring)
-- [Errors](#errors)
-- [Messaging](#messaging)
-- [Persistence](#persistence)
-- [Logging](#logging)
-- [Documentation comments](#documentation-comments)
-- [Formatting](#formatting)
-
----
-
-## Scope
-
-Rules for Java 21 and Spring Boot 3 code in `services/` and `templates/`. This file extends [coding.md](./coding.md) and does not repeat it. Test code follows [testing.md](./testing.md).
-
----
+How Java 21 and Spring Boot 3 code is written in `services/` and `templates/`, for everyone who writes or reviews it. Rules use the prefix `JAVA`, and they add to the [coding](coding.md), [testing](testing.md), [service](services.md), [API](api.md) and [event](events.md) standards without repeating them.
 
 ## Package layout
 
-Every service MUST use this layout under `com.example.<service>`:
+Every service uses this layout under `com.example.<service>`:
 
 | Package | Contains | May depend on |
 |---|---|---|
-| `domain` | Models, value objects, domain events, domain rules | JDK, Lombok |
+| `domain` | Models, value objects, domain events, domain rules | The JDK and Lombok |
 | `application` | `port.in` (`*UseCase`), `port.out` (`*Port`), `usecase` (`*Service`), `dto` (`*Command`, `*Result`) | `domain`, `common`, Spring stereotypes, `@Transactional` |
 | `adapter` | Inbound adapters: `web` (controllers, `*Request`, `*Response`), `messaging` (event handlers), `system` | `application`, `common` |
 | `infrastructure` | Outbound adapters: `persistence`, `messaging`, `security` | `application`, `domain`, `common`, any library |
-| `config` | Spring wiring and `@ConfigurationProperties` | anything |
-| `common` | `error` (codes, `ErrorResponse`, handler), `exception`, `filter` | JDK, Spring web |
+| `config` | Spring wiring and `@ConfigurationProperties` | Anything |
+| `common` | `error` (codes, `ErrorResponse`, handler), `exception`, `filter` | The JDK and Spring Web |
 
-- `adapter` MUST NOT call `infrastructure`; it goes through an inbound port.
-- `domain` MUST NOT import Spring, Jakarta, Jackson, Kafka, Avro or JPA types.
-- Persistence entities (`Jpa*Entity`) and Avro records MUST NOT leave `infrastructure`.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-01 | Code MUST follow the layout above, with each package depending only on what its row allows. | `ArchitectureTest` |
+| JAVA-02 | `adapter` MUST NOT call `infrastructure`; it goes through an inbound port. | `ArchitectureTest` |
+| JAVA-03 | `domain` MUST NOT import Spring, Jakarta, Jackson, Kafka, Avro or JPA types. | `ArchitectureTest` |
+| JAVA-04 | Persistence entities (`Jpa*Entity`) and Avro records MUST NOT leave `infrastructure`. | `ArchitectureTest` |
 
 ## Language
 
-- Records MUST be used for DTOs, commands, results, value objects and configuration properties.
-- Closed sets of outcomes MUST be sealed interfaces handled with pattern-matching `switch`, not flags, nulls or status strings.
-- `switch` over an enum or sealed type MUST be exhaustive without a `default` branch, so a new case fails compilation.
-- `var` MAY be used only when the type is obvious from the right-hand side.
-- Collections MUST NOT be `null`. Return empty or unmodifiable collections (`List.copyOf`, `Map.copyOf`).
-- Raw types, wildcard imports and unused imports MUST NOT appear.
-- Checked exceptions MUST NOT cross a port.
-- Streams SHOULD be used only when clearer than a loop. A stream pipeline MUST NOT have side effects.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-05 | Records MUST be used for DTOs, commands, results, value objects and configuration properties. | Review |
+| JAVA-06 | A closed set of outcomes MUST be a sealed interface handled with a pattern-matching `switch`, not flags, nulls or status strings. | Review |
+| JAVA-07 | A `switch` over an enum or a sealed type MUST be exhaustive without a `default` branch, so a new case fails compilation. | Compiler |
+| JAVA-08 | `var` MAY be used only when the type is plain from the right-hand side. | Review |
+| JAVA-09 | A collection MUST NOT be `null`; methods return empty or unmodifiable collections, as with `List.copyOf`. | Review |
+| JAVA-10 | Raw types, wildcard imports and unused imports MUST NOT appear. | Review |
+| JAVA-11 | A checked exception MUST NOT cross a port. | Review |
+| JAVA-12 | A stream MAY replace a loop only when it reads more plainly, and a stream pipeline MUST NOT have side effects. | Review |
+| JAVA-13 | A time quantity MUST be a `Duration` or an `Instant` rather than a number with a unit in its name. | Review |
 
 ## Null handling
 
-- Parameters, fields and return values are non-null by default.
-- A value that can be absent MUST be returned as `Optional`. `Optional` MUST NOT be a field, parameter or collection element.
-- Constructors MUST validate arguments with `Objects.requireNonNull(value, "name")` and explicit range checks.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-14 | Parameters, fields and return values MUST be non-null unless their type says otherwise. | Review |
+| JAVA-15 | A value that can be absent MUST be returned as `Optional`, and `Optional` MUST NOT be a field, a parameter or a collection element. | Review |
+| JAVA-16 | A constructor MUST check its arguments with `Objects.requireNonNull(value, "name")` and explicit range checks. | Review |
 
 ## Lombok
 
-- Allowed: `@RequiredArgsConstructor`, `@Getter`, `@Slf4j`.
-- Forbidden: `@Data`, `@Setter`, `@Value`, `@AllArgsConstructor`, `@NoArgsConstructor` outside JPA entities, `@SneakyThrows`, Lombok `@NonNull`, and `@Builder` on domain types.
-- Use records, explicit constructors and named static factories instead, for example `restore(...)` to rebuild a domain object from storage.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-17 | Only `@RequiredArgsConstructor`, `@Getter` and `@Slf4j` MAY be used. | Review |
+| JAVA-18 | `@Data`, `@Setter`, `@Value`, `@AllArgsConstructor`, `@SneakyThrows`, Lombok `@NonNull`, `@Builder` on domain types, and `@NoArgsConstructor` outside JPA entities MUST NOT be used. | Review |
+| JAVA-19 | Records, explicit constructors and named static factories, such as `restore(...)` to rebuild a domain object from storage, MUST replace the forbidden annotations. | Review |
 
 ## Time, identifiers and randomness
 
-- Domain and application code MUST NOT call `Instant.now()`, `LocalDateTime.now()`, `UUID.randomUUID()` or `new Random()`.
-- Time comes from an injected `java.time.Clock`; identifiers come from an injected generator port. Tests control both.
-- Time MUST be stored and transported as `Instant` in UTC. Time zones apply only at presentation.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-20 | Domain and application code MUST NOT call `Instant.now()`, `LocalDateTime.now()`, `UUID.randomUUID()` or `new Random()`. | Review |
+| JAVA-21 | Time MUST come from an injected `java.time.Clock`, and identifiers from an injected generator port, so that tests control both. | Review |
+| JAVA-22 | Time MUST be stored and transported as an `Instant` in UTC; a time zone applies only for display. | Review |
 
 ## Spring
 
-- Injection MUST be through constructors (`@RequiredArgsConstructor`). Field and setter injection MUST NOT be used.
-- Controllers MUST be thin: map `*Request` to `*Command`, call one use case, map `*Result` to `*Response`. No business logic, no repositories.
-- Request DTOs MUST be validated with Bean Validation (`@Valid`, constraint annotations) at the controller.
-- `@Transactional` MUST be placed on use case methods only. A transaction MUST NOT span a remote call or a broker publish.
-- Configuration properties MUST be records annotated with `@ConfigurationProperties` and `@Validated`.
-- `@Bean` methods MUST live in `config`.
-- Profiles are `local`, `dev` and `prod`. Defaults in `application.yml` MUST be safe for any profile; secrets come only from the environment.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-23 | Injection MUST go through constructors with `@RequiredArgsConstructor`; field and setter injection MUST NOT be used. | Review |
+| JAVA-24 | A controller MUST only map a `*Request` to a `*Command`, call one use case, and map its `*Result` to a `*Response`. | Review |
+| JAVA-25 | A request DTO MUST be validated with Bean Validation (`@Valid` and constraint annotations) at the controller. | Review |
+| JAVA-26 | `@Transactional` MUST be placed on use case methods only, and a transaction MUST NOT span a remote call or a broker publish. | Review |
+| JAVA-27 | Configuration properties MUST be records annotated with `@ConfigurationProperties` and `@Validated`. | Review |
+| JAVA-28 | `@Bean` methods MUST live in `config`. | Review |
+| JAVA-29 | The profiles MUST be `local`, `dev` and `prod`; defaults in `application.yml` MUST be safe for any profile, and secrets MUST come only from the environment. | Review |
+| JAVA-30 | `management.endpoints.web.exposure.include` MUST be `health,metrics`, as SVC-11 and SVC-12 require. | Review |
 
 ## Errors
 
-- Business rule violations MUST throw `BusinessException` with a code from the service's `*BusinessErrorCode` enum.
-- Technical failures MUST throw `InfrastructureException` with a code from `*InfrasErrorCode`, keeping the original cause.
-- Use cases MUST NOT throw `RuntimeException`, `IllegalStateException` or `IllegalArgumentException` directly.
-- Only the service's global exception handler turns exceptions into HTTP responses, following the `ErrorResponse` contract in [contracts/openapi/error](../../contracts/openapi/error/README.md).
-- `catch (Exception e)` MUST appear only in that handler and in message listeners, and MUST log or rethrow.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-31 | A business rule violation MUST throw `BusinessException` with a code from the service's `*BusinessErrorCode` enum. | Review |
+| JAVA-32 | A technical failure MUST throw `InfrastructureException` with a code from the service's `*InfrasErrorCode` enum, keeping the original cause. | Review |
+| JAVA-33 | A use case MUST NOT throw `RuntimeException`, `IllegalStateException` or `IllegalArgumentException` directly. | Review |
+| JAVA-34 | Only the global exception handler of the service MUST turn exceptions into HTTP responses, as [`ErrorResponse`](../../contracts/openapi/error/error.openapi.yaml) defines. | Review |
+| JAVA-35 | `catch (Exception e)` MAY appear only in that handler and in message listeners, and MUST log or rethrow. | Review |
 
 ## Messaging
 
-- Producing MUST follow: domain event → `*Mapper` (domain to Avro) → `*Router` (topic and key) → producer port.
-- Consuming MUST follow: listener → `*Translator` (Avro to domain event) → `On<Event>` handler in `adapter.messaging.handlers` → use case.
-- The record key MUST be the aggregate identifier, so events of one aggregate stay ordered.
-- Handlers MUST be idempotent: deduplicate by `eventId` before changing state.
-- Failed records MUST go to a dead-letter topic after bounded retries with backoff. They MUST NOT be dropped or retried forever.
-- Writing state and publishing an event MUST be atomic through the transactional outbox once it exists. Until then, code that does both in separate steps is a known risk and MUST be listed in an issue.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-36 | Producing MUST follow: domain event, `*Mapper` from domain to Avro, `*Router` for topic and key, producer port. | Review |
+| JAVA-37 | Consuming MUST follow: listener, `*Translator` from Avro to domain event, `On<Event>` handler in `adapter.messaging.handlers`, use case. | Review |
+| JAVA-38 | A Kafka serializer MUST use `RecordNameStrategy`, as EVT-12 requires. | Review |
 
 ## Persistence
 
-- Schema changes MUST be Flyway migrations in `src/main/resources/db/migration/V<n>__<description>.sql`. Hibernate `ddl-auto` MUST NOT be relied on outside the `local` profile.
-- Invariants that protect correctness (for example reserved seats never exceed capacity) MUST also be database constraints, not only Java checks.
-- Repositories MUST be reached only through `*Port` interfaces and return domain objects.
-- Operations that must be atomic under concurrency MUST state their locking or atomic primitive explicitly and MUST have a concurrency test.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-39 | Migrations MUST be Flyway files named `src/main/resources/db/migration/V<n>__<description>.sql`. | Review |
+| JAVA-40 | `spring.jpa.hibernate.ddl-auto` MUST be `validate` or `none` outside the `local` profile, as SVC-14 requires. | Review |
+| JAVA-41 | An invariant that protects correctness, such as reserved seats never exceeding capacity, MUST also be a database constraint. | Review |
+| JAVA-42 | A repository MUST be reached only through a `*Port` interface and MUST return domain objects. | `ArchitectureTest` |
+| JAVA-43 | An operation that must stay atomic under concurrency MUST name its locking or atomic primitive in the code. | Review |
 
 ## Logging
 
-- Loggers come from `@Slf4j`. Messages use SLF4J placeholders: `log.info("Seat reserved: seatId={}, studentId={}", seatId, studentId)`.
-- An exception MUST be the last argument, so the stack trace reaches the `errorStack` field.
-- An argument without a matching `{}` placeholder is silently dropped; every value MUST have one.
-- Values to search across services go in the MDC. `logback-spring.xml` exports `traceId` and `correlationId`; a new key MUST be added to it in every service.
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-44 | Loggers MUST come from `@Slf4j`, and `System.out` and `System.err` MUST NOT be used. | Review |
+| JAVA-45 | Messages MUST use SLF4J placeholders, as in `log.info("Seat held: sectionId={}, studentId={}", sectionId, studentId)`. | Review |
+| JAVA-46 | An exception MUST be the last argument, so its stack trace reaches `errorStack`. | Review |
+| JAVA-47 | A value to search across services MUST go in the MDC, and a new MDC key MUST be added to `logback-spring.xml` in every service, as SVC-07 requires. | Review |
 
----
+## Tests
+
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-48 | Tests MUST use JUnit 5 and AssertJ, with `@ParameterizedTest` for tables of cases. | Review |
+| JAVA-49 | A unit test MUST be named `*Test` and run in the `test` phase; an integration test MUST be named `*IT` and run in the `verify` phase. | `./mvnw verify` |
+| JAVA-50 | A scenario test MUST be named `*Scenario`, so it runs only on demand, as in `./mvnw verify -Dit.test=OversellScenario`. | `./mvnw verify` |
+| JAVA-51 | Every service MUST have an `ArchitectureTest` written with ArchUnit that enforces the package layout. | `./mvnw verify` |
+| JAVA-52 | An integration test MUST run on embedded PostgreSQL, following [ADR-0004](../adr/0004-run-integration-tests-on-embedded-postgresql.md). | Review |
+| JAVA-53 | A disabled test MUST carry its reason and issue, as in `@Disabled("Fails on leap seconds, see #42")`. | Review |
+| JAVA-54 | JaCoCo in `platform/java/java-parent` MUST enforce the coverage floor of TEST-28 on `domain` and `application`. | `./mvnw verify` |
 
 ## Documentation comments
 
-- Public ports and use cases MUST have a doc comment: a one-sentence summary and one `@throws` line per business error code.
-- Doc comments MUST NOT restate parameter names or types.
-- Getters, records, controllers and private methods MUST NOT have doc comments unless they carry a non-obvious contract.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-55 | A public port and a use case MUST have a Javadoc with a one-sentence summary and one `@throws` line per business error code. | Review |
+| JAVA-56 | A Javadoc MUST NOT restate parameter names or types. | Review |
+| JAVA-57 | Getters, records, controllers and private methods MUST NOT have Javadoc unless they carry a contract the code does not show. | Review |
 
 ## Formatting
 
-- Indentation is 4 spaces; line length is 120 characters.
-- Import order: static imports, `java`, `javax`/`jakarta`, other libraries, `com.example`. One blank line between groups.
-- Member order: constants, fields, constructors, public methods, private methods.
-- One top-level type per file.
+| ID | Rule | Check |
+|---|---|---|
+| JAVA-58 | Indentation MUST be 4 spaces, and a line MUST NOT exceed 120 characters. | Review |
+| JAVA-59 | Imports MUST be grouped as static, `java`, `javax` or `jakarta`, other libraries, then `com.example`, with one blank line between groups. | Review |
+| JAVA-60 | Members MUST be ordered as constants, fields, constructors, public methods, then private methods. | Review |
+| JAVA-61 | A file MUST hold one top-level type. | Review |
+| JAVA-62 | `@SuppressWarnings` MUST name the warning and give its reason in a comment on the same line, as CODE-40 requires. | Review |

@@ -34,7 +34,7 @@ It is:
 The frontend:
 - Communicate exclusively through the **Gateway Service**
 - Strictly follows backend contracts defined in:
-    - [contracts/openapi](./../../contracts/openapi/README.md)
+    - [contracts](./../../contracts/README.md)
 
 ---
 
