@@ -1,118 +1,86 @@
 # Contributing
 
-## Table of contents
-- [Workflow](#workflow)
-- [Issues](#issues)
-- [Branches](#branches)
-- [Commits](#commits)
-- [Pull requests](#pull-requests)
-- [Standards](#standards)
-
----
+How a change travels from a problem to `main`, for everyone who changes the repository. Rules use the prefix `FLOW`; what a change contains follows [`docs/standards/`](docs/standards/) and the [documentation standard](docs/README.md).
 
 ## Workflow
 
-Every change follows the same path:
-
-1. **Issue.** The change starts from an issue that states the problem and its acceptance criteria.
-2. **Branch.** A short-lived branch from the latest `main`.
-3. **Commits.** Small, logical commits in the Conventional Commits format.
-4. **Pull request.** One pull request per issue, filled in from the template.
-5. **Checks.** CI is green and the Definition of Done in the template is met.
-6. **Merge.** Squash merge into `main`, then delete the branch.
-
-`main` is protected: no direct pushes, no force pushes, linear history, and all CI checks must pass.
-
----
+1. State the problem in an issue, or in the pull request description.
+2. Create a branch from the remote `main`.
+3. Commit small, logical steps that each build and pass their tests.
+4. Open a pull request from the template.
+5. Get every check green and every Definition of Done item checked or explained.
+6. Squash merge into `main`, then delete the branch.
 
 ## Issues
 
-- Every change MUST start from an issue: https://github.com/phuck40clnq/slotgate/issues
-- The title is a specific, imperative sentence: `Reject duplicate UserRegistered events in user-service`.
-- The body states the context, the acceptance criteria as a checklist, what is out of scope, and references (ADR, PRD section, logs).
-- Labels:
-  - **type**: `feature`, `bug`, `debt`, `docs`, `chore`
-  - **area**: `gateway`, `auth`, `user`, `contracts`, `platform`, `infra`, `ci`, `frontend`
-  - **phase**: `phase-1` to `phase-4`, matching the roadmap in the [README](README.md#roadmap)
-- Debt found while working on something else MUST become its own issue. It is never fixed silently inside an unrelated change.
+| ID | Rule | Check |
+|---|---|---|
+| FLOW-01 | A change MUST start from an issue, or from a pull request description that states the problem and its acceptance criteria. | Review |
+| FLOW-02 | An issue title MUST be a specific sentence in the imperative, as in `Reject duplicate UserRegistered events in user-service`. | Review |
+| FLOW-03 | An issue body MUST state the context, the acceptance criteria as a checklist, what is out of scope, and its references. | Review |
+| FLOW-04 | An issue MUST carry one label of each group in the table below, as the issue forms in `.github/ISSUE_TEMPLATE/` offer them. | Review |
+| FLOW-05 | Debt found during other work MUST become its own issue, and MUST NOT be fixed inside the unrelated change. | Review |
 
----
+| Group | Labels |
+|---|---|
+| Type | `feature`, `bug`, `debt`, `docs`, `chore` |
+| Area | `gateway`, `auth`, `user`, `contracts`, `platform`, `infra`, `ci`, `frontend` |
+| Phase | `phase-1` to `phase-4`, the phases of the [product requirements](docs/prd-2026-10-17.pdf) |
 
 ## Branches
 
-- Name: `<type>/<issue>-<short-name>` in kebab case, for example `feat/12-seat-inventory` or `fix/31-duplicate-user-registered`.
-- Branch from the latest `main`. Update by rebasing onto `main`; never merge `main` into a branch.
-- A branch SHOULD live less than a week. Split the work if it takes longer.
-
----
+| ID | Rule | Check |
+|---|---|---|
+| FLOW-06 | A branch MUST be created from the remote `main` and named `<type>/<short-name>`, or `<type>/<issue>-<short-name>` when an issue exists. | Review |
+| FLOW-07 | Work that needs an unmerged branch MUST start from that branch, and its pull request MUST name the pull request it builds on. | Review |
+| FLOW-08 | A branch MUST be updated by rebasing onto `main`, never by merging `main` into it. | Review |
+| FLOW-09 | Nobody MAY commit or push to `main` directly or force-push it; changes reach it only through squash-merged pull requests. | Branch protection |
 
 ## Commits
 
-Commits follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
+A commit message follows [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): `<type>(<scope>): <summary>`, with an optional body and footer.
 
-```text
-<type>(<scope>): <summary>
-
-<body>
-
-<footer>
-```
+| ID | Rule | Check |
+|---|---|---|
+| FLOW-10 | The type MUST be one of the table below. | Review |
+| FLOW-11 | The scope MUST be the service without `-service`, as in `seat-inventory`, or the area, as in `contracts`, `platform` or `adr`; a change across the repository omits it. | Review |
+| FLOW-12 | The summary MUST be one sentence in the imperative and lower case, without a final period, and the first line MUST NOT exceed 72 characters. | Review |
+| FLOW-13 | A body MAY add one short sentence on why, when the summary cannot say it. | Review |
+| FLOW-14 | A breaking change to a contract, an API, an event or a data format MUST add `!` after the scope and a one-line `BREAKING CHANGE:` footer. | Review |
+| FLOW-15 | The only trailers MUST be `Refs #N` or `Closes #N` for an existing issue and `BREAKING CHANGE:`; authorship and tool attributions MUST NOT be added. | Review |
+| FLOW-16 | Every commit MUST build and pass its tests, so that history stays bisectable. | `./mvnw verify` |
+| FLOW-17 | A commit MUST hold one logical change; messages such as `wip`, `update` or `fix typo` MUST NOT reach `main`. | Review |
 
 | Type | Use for |
 |---|---|
-| `feat` | A new behaviour visible to users or other services |
+| `feat` | A behaviour visible to users or other services |
 | `fix` | A defect fix |
-| `refactor` | A code change that neither fixes a defect nor adds behaviour |
-| `perf` | A performance improvement with a measurement |
-| `test` | Adding or correcting tests only |
+| `refactor` | A change that neither fixes a defect nor adds behaviour |
+| `perf` | A performance gain, with the numbers CORE-24 asks for |
+| `test` | Tests only |
 | `docs` | Documentation only |
-| `build` | Build system, dependencies, platform POMs |
-| `ci` | CI and CD configuration |
+| `build` | Build system, dependencies, platform files |
+| `ci` | Continuous integration and delivery |
 | `chore` | Maintenance that fits none of the above |
-
-Rules:
-- **Scope** is the service or area: `gateway`, `auth`, `user`, `test-service`, `contracts`, `platform`, `templates`, `infra`, `frontend`. Omit it only for repository-wide changes.
-- **Summary** is imperative, starts lowercase, has no trailing period, and the whole first line is at most 72 characters.
-- **Body** explains why the change is needed and what it changes at a high level, wrapped at 72 characters. The diff already shows how.
-- **Footer** links issues (`Refs #12`, `Closes #12`). A breaking change to a contract adds `!` after the type and a `BREAKING CHANGE:` footer.
-- Every commit MUST build and pass its tests, so history stays bisectable.
-- Commits such as `wip`, `update`, `fix typo` or `misc` MUST NOT reach `main`. Squash or reword them before review.
 
 Examples:
 
 ```text
-Good:  feat(user): ignore duplicate UserRegistered events
-Good:  fix(gateway): return 429 when the rate limit is exceeded
-Good:  build(platform): add Spotless with palantir-java-format
-
-Bad:   Fixed bug                          (no type, past tense, vague)
-Bad:   feat: Added new feature.           (past tense, capitalised, period, vague)
-Bad:   chore(user): update stuff and fix tests and refactor handler   (several changes)
+Good: feat(seat-inventory): list sections with a code and a title
+Good: fix(gateway): return 429 when the rate limit is exceeded
+Bad:  Fixed bug                         no type, past tense, vague
+Bad:  feat: Added new feature.          past tense, capital letter, period
+Bad:  chore(user): update stuff and refactor handler   several changes
 ```
-
----
 
 ## Pull requests
 
-- One pull request per issue, one purpose per pull request.
-- The title MUST follow the commit format above; it becomes the squash commit on `main`.
-- The description MUST be filled in from the [pull request template](.github/pull_request_template.md). Every item of its Definition of Done MUST be checked or explained.
-- A pull request SHOULD change at most 400 lines, excluding generated files. Larger work is split into a stack of smaller pull requests. Purely mechanical changes (renames, formatting) are the only exception and are stated as such.
-- A contract change MUST show its compatibility check and update every consumer in the same pull request or a linked one.
-- An architectural decision MUST include its ADR in [docs/adr/](docs/adr/README.md) in the same pull request.
-- All CI checks MUST pass. Checks are never skipped, disabled or retried until green.
-- Before asking for review, the author reads the full diff on GitHub as a reviewer would.
-- Merge with **squash** only, then delete the branch.
-
----
-
-## Standards
-
-Code in a pull request follows:
-- [Coding standard](docs/standards/coding.md)
-- [Java standard](docs/standards/java.md)
-- [Testing standard](docs/standards/testing.md)
-- [Core rules](docs/core/rules.md)
-- [Contract policies](contracts/README.md)
-
-Setup and commands are in the [README](README.md#getting-started).
+| ID | Rule | Check |
+|---|---|---|
+| FLOW-18 | A pull request MUST have one purpose, and its title MUST follow the commit format, because it becomes the squash commit. | Review |
+| FLOW-19 | The description MUST be filled in from the [pull request template](.github/pull_request_template.md), with every Definition of Done item checked or explained. | Review |
+| FLOW-20 | A pull request MUST change at most 400 lines excluding generated files, or its summary MUST explain why; larger work is split into stacked pull requests. | Review |
+| FLOW-21 | A contract change MUST show its compatibility check and update every consumer in the same pull request or a linked one. | Review |
+| FLOW-22 | A decision that DOC-16 assigns to an ADR MUST bring its ADR in the same pull request. | Review |
+| FLOW-23 | Every check MUST pass, and no check MAY be skipped, disabled or rerun until it passes. | Continuous integration |
+| FLOW-24 | The author MUST read the full diff on GitHub, as a reviewer would, before asking for review. | Review |

@@ -31,7 +31,7 @@ Every binding document writes its rules the way this section does.
 | Core | `docs/core/` | What Slot Gate is, and what it must never violate | Binding |
 | Standards | `docs/standards/` | How to build a part correctly | Binding |
 | Contracts | `contracts/` | What services and clients exchange | Binding |
-| Contribution templates | `.github/` | What an issue or a pull request must contain | Binding |
+| Contribution rules | `CONTRIBUTING.md` and `.github/` | How a change reaches `main`, and what issues and pull requests contain | Binding |
 | Architecture decision records (ADRs) | `docs/adr/` | Why one option was chosen over the others | Record |
 | Architecture | `docs/architecture/` | How the running system works now | Description |
 | Component READMEs | `README.md` in the component's folder | What the component is, why it exists, how to run and test it | Description |
@@ -196,6 +196,6 @@ Every component README follows this skeleton:
 | DOC-55 | A document MUST NOT contain `TODO`, `FIXME`, placeholder sections or change logs, because history is in git. | Review |
 | DOC-56 | A non-record document that breaks this standard MUST be brought in line by the next pull request changing it, unless that change only fixes links or names. | Review |
 | DOC-57 | A change to core MUST follow an accepted ADR, and a change to core or to this standard MUST be approved by the project owner. | Review |
-| DOC-58 | A committed document MUST NOT link to, cite or depend on a file that git ignores or excludes, because readers of the repository cannot open it. A command MAY create such a file. | `git check-ignore <path>` |
+| DOC-58 | A committed document MUST NOT link to, cite or depend on a file that git ignores or excludes, because repository readers cannot open it. A command MAY create such a file. | `git check-ignore <path>` |
 
 Reviewers check these rules through the documentation items of the [pull request template](../.github/pull_request_template.md).

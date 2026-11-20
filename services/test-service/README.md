@@ -1,126 +1,44 @@
-# Test Service
+# test-service
 
-## Table of contents
-- [Overview](#overview)
-- [Purpose](#purpose)
-- [Runtime Context](#runtime-context)
-- [Access Model](#access-model)
-- [Scope](#scope)
-- [Configuration](#configuration)
-- [How to run local](#how-to-run-local)
-    - [Requirements](#requirements)
-    - [Run the service](#run-the-service)
-- [Why This Service Exists](#why-this-service-exists)
+A sandbox service with no business logic, used to check routing, headers, error handling and logs through the gateway. For anyone who changes the gateway or the shared service setup.
 
----
+## Why it exists
 
-## Overview
+A change to routing or to the shared setup can be tried here without touching a real service or its data. It keeps no state and takes part in no event flow.
 
-Test Service is a **lightweight internal service** used to validate infrastructure behavior within the platform.
+## API and events
 
-It exists purely for **development** and **verification purposes**.
+The gateway routes `/api/test/**` here without asking for a token.
 
-It does not implement business logic.
+| Endpoint | Answer |
+|---|---|
+| `GET /api/v1/test/hello` | `{ "userId": ... }` from the required header `X-User-Id` |
+| `GET /api/v1/test/error-400` | `400` with the code `INVALID_INPUT` |
+| `GET /api/v1/test/error-404` | `404` with the code `USER_NOT_FOUND` |
+| `GET /api/v1/test/error-500` | `500` from an unhandled exception |
 
----
-
-## Purpose
-
-This service is used to:
-- Verify Gateway routing
-- Validate identity propagation
-- Inspect injected headers
-- Test CORS behavior
-- Confirm environment setup
-- Inspect structured logging output
-
----
-
-## Runtime Context
-
-Test Service runs behind the Gateway and relies on upstream authentication and identity propagation.
-
-It:
-- Uses a simple REST adapter (TestController)
-- Relies on environment-based configuration (local, dev, prod)
-- Does not contain domain or business logic
-
----
-
-## Access Model
-
-Test Service is exposed through the Gateway.
-
-Depending on configuration, it may:
-- Be configured as a public (permit-all) route
-- Be protected to validate identity propagation
-
-This allows developers to test:
-- Authenticated vs unauthenticated routes
-- Header injection behavior
-- Request forwarding rules
-
----
-
-## Scope
-
-Test Service:
-- Exposes simple HTTP endpoints
-- Returns diagnostic responses
-- Logs request metadata
-
-It does **not**:
-- Persist data
-- Own domain models
-- Participate in event-driven workflows
-- Integrate with Kafka
-- Implement business logic
-
----
+The error bodies hold `code` and `message` only, not the `ErrorResponse` of API-17.
 
 ## Configuration
-Environment-specific configuration:
-- `application.yml`
-- `application-local.yml`
-- `application-dev.yml`
-- `application-prod.yml`
 
-No external infrastructure dependencies are required.
+| Variable | Meaning |
+|---|---|
+| `SERVICE_NAME` | Name in logs; defaults to `test-service` |
+| `PORT` | HTTP port; defaults to `6868` |
+| `SPRING_PROFILES_ACTIVE` | Fills the `env` field of the logs; the service has no profile files |
 
----
+## Run
 
-## How to run (local)
-
-### Requirements
-- Java 21
-
----
-
-### Run the service
-From project root:
-
-#### macOS / Linux
 ```bash
 cd services/test-service
 ./mvnw spring-boot:run
 ```
 
-#### Windows (PowerShell / CMD)
-```PowerShell
+## Test
+
+```bash
 cd services/test-service
-mvnw.cmd spring-boot:run
+./mvnw verify
 ```
 
----
-
-## Why This Service Exists
-
-This service is intentionally minimal.
-
-It acts as:
-- A verification target
-- A debugging aid
-- A development utility
-- A safe sandbox for infrastructure testing
-
-It helps validate routing, security boundaries, and logging behavior before integrating real domain services.
+The only test checks that the application starts.

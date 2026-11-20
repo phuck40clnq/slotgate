@@ -1,180 +1,57 @@
-# Authentication Architecture
+# Authentication
 
-## Table of contents
-- [Scope](#scope)
-- [Purpose](#purpose)
-- [Core Principles](#core-principles)
-- [Authentication Flow](#authentication-flow)
-- [Token Model](#token-model)
-- [Identity Propagation](#identity-propagation)
-- [Separation from Authorization](#separation-from-authorization)
-- [Expiration and Revocation](#expiration-and-revocation)
-- [Security Constraints](#security-constraints)
-- [Architectural Constraints](#architectural-constraints)
+How a caller proves who it is and how that identity reaches the services today, for anyone who changes `auth-service`, the gateway or a service that reads the caller. The rules it follows are CORE-12 and API-16.
 
----
+## Flow
 
-## Scope
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant G as gateway-service
+    participant A as auth-service
+    participant S as Service
+    C->>G: POST /api/auth/login with email and password
+    G->>A: POST /api/v1/auth/login
+    A-->>C: token, a signed JWT
+    C->>G: GET /api/seat-inventory/me/holds with Authorization Bearer token
+    G->>A: GET /oauth2/jwks when it needs the public key
+    G->>G: verify signature, expiry and audience
+    G->>S: GET /api/v1/seat-inventory/me/holds with X-Internal-User-Id
+```
 
-This document defines the authentication architecture of the system.
+## Endpoints of `auth-service`
 
-It describes how identity is:
-- Established
-- Verified
-- Issued
-- Validated
-- Propagated
+| Endpoint | What it does |
+|---|---|
+| `POST /api/v1/auth/register` | Creates a user with a BCrypt hash of the password, publishes `UserRegistered`, returns an access token |
+| `POST /api/v1/auth/login` | Checks the password, publishes `UserLoggedIn`, returns an access token |
+| `POST /api/v1/auth/refresh` | Returns the fixed string `fake-refreshed-token` and issues no token |
+| `GET /oauth2/jwks` | Serves the public key as a JSON Web Key Set |
 
-*It does not define domain authorization rules*.
+## Access token
 
----
+| Property | Value |
+|---|---|
+| Format | JWT signed with RS256 |
+| Key | One RSA key pair, generated once per machine as the root `README.md` describes, with one fixed key ID and no rotation |
+| `iss` | The value of `OAUTH_JWK_SET_URI` |
+| `sub` | The ID of the user |
+| `aud` | `gateway` |
+| `iat` and `exp` | The time of issue, and 900 s later |
+| Permissions | None: the token says who the caller is, not what it may do |
 
-## Purpose
+## Verification at the gateway
 
-Authentication is responsible for verifying the identity of external actors.
+- The gateway checks the signature against the key set at `OAUTH_JWK_SET_URI`, the expiry, and the audience `gateway`. It does not check the issuer.
+- Every `OPTIONS` request, and every request to `/api/auth/**`, `/api/test/**` or `/public/**`, passes without a token.
+- Any other request without a valid token is rejected with `401`.
+- On a request with a valid token, the gateway sets `X-Internal-User-Id` to the `sub` claim, replacing any value the client sent.
 
-The goals are to:
-- Establish trusted identity
-- Prevent unauthorized system access
-- Provide a consistent identity model across services
-- Maintain replaceable and scalable identity infrastructure
+## In the services
 
-Authentication is a cross-cutting infrastructure concern.
+A service reads the caller only from `X-Internal-User-Id` and never sees a password or a token. Each service decides from its own data what the caller may do, because tokens carry no permissions.
 
-*It is not a domain service*.
+## Details
 
----
-
-## Core Principles
-
-- Identity verification happens at the system boundary.
-- Authentication is logically centralized.
-- Identity context must be minimal and standardized.
-- Authentication mechanisms must be replaceable without domain impact.
-- Authentication must not carry domain semantics.
-- Authentication must not introduce domain coupling.
-
-Any deviation from these principles requires explicit architectural review.
-
----
-
-## Authentication Flow
-
-1. Client submits credentials to the Authentication Service.
-2. Authentication Service validates credentials.
-3. A signed identity token is issued.
-4. Client includes the token in subsequent requests.
-5. The Gateway validates the token before forwarding the request.
-
-Authentication is completed before a request reaches any domain service.
-
-*Domain services **MUST NEVER** process raw credentials*.
-
----
-
-## Token Model
-
-Authentication issues signed identity tokens.
-
-Token requirements **MUST**:
-- Be cryptographically verifiable.
-- Contain minimal identity claims.
-- Include an explicit expiration time.
-- Be portable across services.
-- **NOT** require domain service coordination for validation.
-
-Token validation in services **MUST NOT** require database access.
-
-Token structure changes MUST preserve backward compatibility during transition periods.
-
-Authentication tokens represent identity only.
-
-*They **MUST NOT** encode business permissions or workflow state*.
-
----
-
-## Identity Propagation
-
-After validation at the Gateway:
-- A verified identity context is forwarded to downstream services.
-- The integrity of this context MUST be preserved.
-- Services MUST rely only on verified identity context provided through trusted infrastructure.
-- Services MUST NOT trust raw client credentials.
-
-Internal communication MUST occur within a trusted network boundary.
-
-Identity propagation MUST remain consistent across all services.
-
-*No service may redefine the identity structure independently*.
-
----
-
-## Separation from Authorization
-
-Authentication verifies **who the actor is**.
-
-Authorization determines **what the actor is allowed to do**.
-
-Authorization rules:
-- Belong to domain services.
-- MUST NOT be centralized in the Authentication Service.
-- MUST NOT be embedded in the Gateway.
-- MUST NOT be encoded inside identity tokens.
-
-This separation ensures:
-- Domain autonomy
-- Independent service evolution
-- Scalable system growth
-
-*Authentication provides identity*.
-
-*Domains enforce permissions*.
-
----
-
-## Expiration and Revocation
-
-Tokens **MUST** have explicit expiration policies.
-
-Short-lived tokens are preferred over centralized session state.
-
-Authentication **MUST** support revocation mechanisms when required.
-
-Revocation strategies **MUST**:
-- NOT require domain service coordination.
-- NOT introduce tight coupling.
-- Avoid introducing centralized runtime dependency for every request.
-- Avoid shared session state that limits scalability.
-
-&rarr; Expired or revoked tokens **MUST** be rejected at the boundary.
-
-*Authentication **MUST NOT** become a centralized session store*.
-
----
-
-## Security Constraints
-
-- Credentials MUST NEVER reach domain services.
-- Tokens MUST be tamper-resistant and verifiable.
-- Expired or invalid tokens MUST be rejected before reaching domain logic.
-- Authentication failure handling MUST NOT leak sensitive system information.
-- Internal services MUST NOT expose authentication endpoints publicly.
-- Key management MUST support rotation without system-wide disruption.
-
-*Authentication **MUST NOT** introduce domain coupling or operational fragility*.
-
----
-
-## Architectural Constraints
-
-Authentication:
-- **MUST** remain stateless by default.
-- **MUST NOT** own domain data.
-- **MUST NOT** implement business workflow logic.
-- **MUST NOT** enforce domain-specific permission models.
-- **MUST NOT** become a centralized authorization engine.
-- **MUST NOT** create tight coupling between services.
-
-Authentication is an infrastructure component.
-
-*It establishes trust and does NOT enforce business meaning*.
+- [ADR-0003](../adr/0003-use-jwt-rsa.md): why tokens are JWTs signed with RSA
+- [`auth-service`](../../services/auth-service/README.md) and [`gateway-service`](../../services/gateway-service/README.md)

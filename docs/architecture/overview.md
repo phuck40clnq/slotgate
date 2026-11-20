@@ -50,7 +50,7 @@ Each service with state owns one PostgreSQL database and role, following CORE-10
 
 ## Details
 
-- [Gateway](gateway.md)
+- [`gateway-service`](../../services/gateway-service/README.md)
 - [Authentication](authentication.md)
 - [Event standard](../standards/events.md)
 - [Architecture decision records](../adr/README.md)

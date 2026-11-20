@@ -19,8 +19,8 @@ The repository of Slot Gate, a course registration platform shared by many schoo
 | [`test-service`](services/test-service/README.md) | 6868 | Sandbox for routing, contract and event experiments |
 | [`frontend/web/`](frontend/web/README.md) | | Web client: login, registration, profile |
 | [`contracts/`](contracts/README.md) | | OpenAPI and Avro contracts between services and clients |
-| [`platform/`](platform/README.md) | | Shared build baseline per language |
-| [`templates/`](templates/README.md) | | Starting point for a new service per language |
+| [`platform/java/`](platform/java/README.md) | | Shared build baseline of Java services |
+| [`templates/spring-boot-service/`](templates/spring-boot-service/README.md) | | Template every Java service is copied from |
 | [`infrastructure/postgres/`](infrastructure/postgres/README.md) | 5432 | One PostgreSQL database and role per service |
 | [`infrastructure/kafka/`](infrastructure/kafka/README.md) | 9092, 8081, 2181 | Kafka, Schema Registry and ZooKeeper |
 
@@ -46,6 +46,7 @@ Requirements: Java 21, Maven 3.9 or later, and PostgreSQL 14 or later on `localh
 3. Generate the JWT key pair of `auth-service`, once per machine; both files stay out of git:
 
    ```bash
+   mkdir -p services/auth-service/src/main/resources/keys
    cd services/auth-service/src/main/resources/keys
    openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
    openssl rsa -pubout -in private.pem -out public.pem
@@ -69,6 +70,7 @@ Requirements: Java 21, Maven 3.9 or later, and PostgreSQL 14 or later on `localh
 
 - [Contributing](CONTRIBUTING.md): issues, branches, commits and pull requests
 - [Standards](docs/standards/): coding, testing, services, APIs, events and Java
+- [Guides](docs/guides/): adding a service
 - [Architecture decision records](docs/adr/README.md)
 - [Incidents](docs/incidents/README.md)
 - [Product requirements](docs/prd-2026-10-17.pdf), in Vietnamese, as first agreed with the supervisor
