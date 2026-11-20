@@ -18,8 +18,10 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 
 import com.example.seatinventory.adapter.web.dto.SeatHoldResponse;
 import com.example.seatinventory.adapter.web.dto.SectionResponse;
+import com.example.seatinventory.adapter.web.dto.SectionsResponse;
 import com.example.seatinventory.common.error.ErrorResponse;
 import com.example.seatinventory.support.PostgresIntegrationTest;
+import com.example.seatinventory.support.SectionFixtures;
 
 class SectionApiIT extends PostgresIntegrationTest {
 
@@ -34,11 +36,44 @@ class SectionApiIT extends PostgresIntegrationTest {
 
     @Test
     void opensSectionWithEverySeatLeft() {
-        ResponseEntity<SectionResponse> response = open(40, SectionResponse.class);
+        ResponseEntity<SectionResponse> response = open("API-OPEN", 40, SectionResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().code()).isEqualTo("API-OPEN");
+        assertThat(response.getBody().title()).isEqualTo(SectionFixtures.SECTION_TITLE);
         assertThat(response.getBody().capacity()).isEqualTo(40);
         assertThat(response.getBody().seatsLeft()).isEqualTo(40);
+    }
+
+    @Test
+    void listsTheOpenedSections() {
+        UUID sectionId = openSection(3);
+
+        SectionsResponse response = rest.getForObject(SECTIONS, SectionsResponse.class);
+
+        assertThat(response.sections())
+            .filteredOn(section -> section.sectionId().equals(sectionId))
+            .singleElement()
+            .returns(3, SectionResponse::seatsLeft);
+    }
+
+    @Test
+    void refusesACodeThatAnotherSectionHas() {
+        open("API-TAKEN", 10, SectionResponse.class);
+
+        ResponseEntity<ErrorResponse> response = open("API-TAKEN", 5, ErrorResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().code()).isEqualTo("SECTION_CODE_TAKEN");
+    }
+
+    @Test
+    void refusesASectionWithoutCode() {
+        ResponseEntity<ErrorResponse> response = rest.postForEntity(
+            SECTIONS, Map.of("title", "No code", "capacity", 5), ErrorResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().code()).isEqualTo("INVALID_REQUEST");
     }
 
     @Test
@@ -190,7 +225,13 @@ class SectionApiIT extends PostgresIntegrationTest {
     }
 
     private <T> ResponseEntity<T> open(int capacity, Class<T> responseType) {
-        return rest.postForEntity(SECTIONS, Map.of("capacity", capacity), responseType);
+        return open(SectionFixtures.openSectionCommand(capacity).code(), capacity, responseType);
+    }
+
+    private <T> ResponseEntity<T> open(String code, int capacity, Class<T> responseType) {
+        Map<String, Object> request =
+            Map.of("code", code, "title", SectionFixtures.SECTION_TITLE, "capacity", capacity);
+        return rest.postForEntity(SECTIONS, request, responseType);
     }
 
     private <T> ResponseEntity<T> hold(UUID sectionId, UUID studentId, Class<T> responseType) {

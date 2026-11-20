@@ -3,6 +3,7 @@ package com.example.seatinventory.infrastructure.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import com.example.seatinventory.application.port.out.SeatInventoryPort;
 import com.example.seatinventory.domain.model.SeatClaim;
 import com.example.seatinventory.domain.model.Section;
 import com.example.seatinventory.support.PostgresIntegrationTest;
+import com.example.seatinventory.support.SectionFixtures;
 
 class SeatInventoryPersistenceAdapterIT extends PostgresIntegrationTest {
 
@@ -24,13 +26,66 @@ class SeatInventoryPersistenceAdapterIT extends PostgresIntegrationTest {
     private JdbcClient jdbcClient;
 
     @Test
+    void savesASectionWithItsCodeAndTitle() {
+        Section section = SectionFixtures.section(UUID.randomUUID(), 10, 0);
+
+        boolean isSaved = seatInventory.saveIfCodeIsFree(section);
+
+        assertThat(isSaved).isTrue();
+        assertThat(seatInventory.findSection(section.id())).contains(section);
+    }
+
+    @Test
+    void skipsASectionWhoseCodeIsTaken() {
+        Section first = openSection(10, 0);
+        Section second = new Section(UUID.randomUUID(), first.code(), "Another course", 5, 0);
+
+        boolean isSaved = seatInventory.saveIfCodeIsFree(second);
+
+        assertThat(isSaved).isFalse();
+        assertThat(seatInventory.findSection(second.id())).isEmpty();
+    }
+
+    @Test
+    void databaseRefusesASecondSectionWithTheSameCode() {
+        Section first = openSection(10, 0);
+
+        assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(() -> jdbcClient
+            .sql("INSERT INTO section (id, code, title, capacity) VALUES (:id, :code, 'Another course', 5)")
+            .param("id", UUID.randomUUID())
+            .param("code", first.code())
+            .update());
+    }
+
+    @Test
+    void databaseRefusesACodeTheServiceCouldNotRead() {
+        assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(() -> jdbcClient
+            .sql("INSERT INTO section (id, code, title, capacity) VALUES (:id, :code, 'Course', 5)")
+            .param("id", UUID.randomUUID())
+            .param("code", "X".repeat(33))
+            .update());
+    }
+
+    @Test
+    void listsSectionsByCode() {
+        Section later = save(new Section(UUID.randomUUID(), "LIST-B", "Listed second", 5, 1));
+        Section earlier = save(new Section(UUID.randomUUID(), "LIST-A", "Listed first", 5, 0));
+
+        List<Section> sections = seatInventory.listSections();
+
+        assertThat(sections)
+            .filteredOn(section -> section.code().startsWith("LIST-"))
+            .containsExactly(earlier, later);
+    }
+
+    @Test
     void claimsSeatWhileSeatsAreLeft() {
         Section section = openSection(1, 0);
 
         SeatClaim claim = seatInventory.claimSeat(section.id());
 
         assertThat(claim).isEqualTo(new SeatClaim.Claimed());
-        assertThat(seatInventory.findSection(section.id())).contains(new Section(section.id(), 1, 1));
+        assertThat(seatInventory.findSection(section.id())).contains(withReservedSeats(section, 1));
     }
 
     @Test
@@ -66,7 +121,7 @@ class SeatInventoryPersistenceAdapterIT extends PostgresIntegrationTest {
 
         seatInventory.releaseSeats(section.id(), 3);
 
-        assertThat(seatInventory.findSection(section.id())).contains(new Section(section.id(), 10, 4));
+        assertThat(seatInventory.findSection(section.id())).contains(withReservedSeats(section, 4));
     }
 
     @Test
@@ -78,8 +133,15 @@ class SeatInventoryPersistenceAdapterIT extends PostgresIntegrationTest {
     }
 
     private Section openSection(int capacity, int reservedSeats) {
-        Section section = new Section(UUID.randomUUID(), capacity, reservedSeats);
-        seatInventory.save(section);
+        return save(SectionFixtures.section(UUID.randomUUID(), capacity, reservedSeats));
+    }
+
+    private Section save(Section section) {
+        seatInventory.saveIfCodeIsFree(section);
         return section;
+    }
+
+    private static Section withReservedSeats(Section section, int reservedSeats) {
+        return new Section(section.id(), section.code(), section.title(), section.capacity(), reservedSeats);
     }
 }

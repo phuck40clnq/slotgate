@@ -16,6 +16,7 @@ import com.example.seatinventory.domain.model.SeatHoldStatus;
 import com.example.seatinventory.domain.model.Section;
 import com.example.seatinventory.support.InMemorySeatHolds;
 import com.example.seatinventory.support.InMemorySeatInventory;
+import com.example.seatinventory.support.SectionFixtures;
 
 class ExpireSeatHoldsServiceTest {
 
@@ -29,7 +30,7 @@ class ExpireSeatHoldsServiceTest {
 
     @Test
     void givesTheSeatsOfExpiredHoldsBack() {
-        seatInventory.save(new Section(SECTION_ID, 40, 3));
+        seatInventory.save(SectionFixtures.section(SECTION_ID, 40, 3));
         SeatHold firstExpired = hold(SECTION_ID, NOW.minusSeconds(1), SeatHoldStatus.HELD);
         SeatHold secondExpired = hold(SECTION_ID, NOW, SeatHoldStatus.HELD);
         SeatHold stillHeld = hold(SECTION_ID, NOW.plusSeconds(1), SeatHoldStatus.HELD);
@@ -47,7 +48,7 @@ class ExpireSeatHoldsServiceTest {
 
     @Test
     void keepsConfirmedHoldsAndTheirSeats() {
-        seatInventory.save(new Section(SECTION_ID, 40, 1));
+        seatInventory.save(SectionFixtures.section(SECTION_ID, 40, 1));
         SeatHold confirmed = hold(SECTION_ID, NOW.minusSeconds(1), SeatHoldStatus.CONFIRMED);
         seatHolds.add(confirmed);
 

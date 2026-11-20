@@ -1,0 +1,14 @@
+[
+  { "code": "SIM101 1", "title": "Introduction to Programming", "capacity": 60 },
+  { "code": "SIM101 2", "title": "Introduction to Programming", "capacity": 60 },
+  { "code": "SIM102 1", "title": "Discrete Mathematics", "capacity": 40 },
+  { "code": "SIM201 1", "title": "Data Structures and Algorithms", "capacity": 40 },
+  { "code": "SIM202 1", "title": "Databases", "capacity": 30 },
+  { "code": "SIM203 1", "title": "Computer Networks", "capacity": 30 },
+  { "code": "SIM204 1", "title": "Operating Systems", "capacity": 20 },
+  { "code": "SIM301 1", "title": "Distributed Systems", "capacity": 10 },
+  { "code": "SIM302 1", "title": "Software Architecture", "capacity": 10 },
+  { "code": "SIM303 1", "title": "Web Application Development", "capacity": 5 },
+  { "code": "SIM401 1", "title": "Technology Project", "capacity": 3 },
+  { "code": "SIM402 1", "title": "Research Seminar", "capacity": 2 }
+]

@@ -1,7 +1,13 @@
 package com.example.seatinventory.adapter.web.dto;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-public record OpenSectionRequest(@NotNull @Min(1) Integer capacity) {
+public record OpenSectionRequest(
+    @NotBlank @Size(max = 32) String code,
+    @NotBlank @Size(max = 200) String title,
+    @NotNull @Min(1) Integer capacity
+) {
 }

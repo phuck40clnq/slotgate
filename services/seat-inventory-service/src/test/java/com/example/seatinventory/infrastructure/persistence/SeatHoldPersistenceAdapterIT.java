@@ -20,6 +20,7 @@ import com.example.seatinventory.domain.model.SeatHold;
 import com.example.seatinventory.domain.model.SeatHoldStatus;
 import com.example.seatinventory.domain.model.Section;
 import com.example.seatinventory.support.PostgresIntegrationTest;
+import com.example.seatinventory.support.SectionFixtures;
 
 class SeatHoldPersistenceAdapterIT extends PostgresIntegrationTest {
 
@@ -176,8 +177,8 @@ class SeatHoldPersistenceAdapterIT extends PostgresIntegrationTest {
     }
 
     private UUID openSection() {
-        Section section = Section.open(UUID.randomUUID(), 10);
-        seatInventory.save(section);
+        Section section = SectionFixtures.section(UUID.randomUUID(), 10, 0);
+        seatInventory.saveIfCodeIsFree(section);
         return section.id();
     }
 

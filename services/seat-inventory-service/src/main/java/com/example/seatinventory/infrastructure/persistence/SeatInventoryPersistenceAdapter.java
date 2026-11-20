@@ -2,6 +2,7 @@ package com.example.seatinventory.infrastructure.persistence;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,21 +21,39 @@ public class SeatInventoryPersistenceAdapter implements SeatInventoryPort {
 
     private final JdbcClient jdbcClient;
 
+    /**
+     * A concurrent insert with the same code waits on the unique index until the first one commits or rolls
+     * back, then either skips or inserts.
+     */
     @Override
-    public void save(Section section) {
-        jdbcClient.sql("INSERT INTO section (id, capacity, reserved_seats) VALUES (:id, :capacity, :reservedSeats)")
+    public boolean saveIfCodeIsFree(Section section) {
+        int savedRows = jdbcClient.sql("""
+                INSERT INTO section (id, code, title, capacity, reserved_seats)
+                VALUES (:id, :code, :title, :capacity, :reservedSeats)
+                ON CONFLICT (code) DO NOTHING
+                """)
             .param("id", section.id())
+            .param("code", section.code())
+            .param("title", section.title())
             .param("capacity", section.capacity())
             .param("reservedSeats", section.reservedSeats())
             .update();
+        return savedRows == 1;
     }
 
     @Override
     public Optional<Section> findSection(UUID sectionId) {
-        return jdbcClient.sql("SELECT id, capacity, reserved_seats FROM section WHERE id = :id")
+        return jdbcClient.sql("SELECT id, code, title, capacity, reserved_seats FROM section WHERE id = :id")
             .param("id", sectionId)
             .query((row, rowNumber) -> toSection(row))
             .optional();
+    }
+
+    @Override
+    public List<Section> listSections() {
+        return jdbcClient.sql("SELECT id, code, title, capacity, reserved_seats FROM section ORDER BY code")
+            .query((row, rowNumber) -> toSection(row))
+            .list();
     }
 
     /**
@@ -68,6 +87,8 @@ public class SeatInventoryPersistenceAdapter implements SeatInventoryPort {
     private Section toSection(ResultSet row) throws SQLException {
         return new Section(
             row.getObject("id", UUID.class),
+            row.getString("code"),
+            row.getString("title"),
             row.getInt("capacity"),
             row.getInt("reserved_seats"));
     }

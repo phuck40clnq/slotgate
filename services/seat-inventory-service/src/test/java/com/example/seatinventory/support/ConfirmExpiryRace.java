@@ -16,7 +16,6 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.seatinventory.application.dto.ConfirmSeatHoldCommand;
-import com.example.seatinventory.application.dto.OpenSectionCommand;
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
 import com.example.seatinventory.application.port.in.OpenSectionUseCase;
 import com.example.seatinventory.application.port.out.IdGeneratorPort;
@@ -74,7 +73,7 @@ public abstract class ConfirmExpiryRace extends PostgresIntegrationTest {
     }
 
     protected Outcome race(SeatHoldRepositoryPort seatHolds, int holds) {
-        UUID sectionId = openSection.openSection(new OpenSectionCommand(holds)).sectionId();
+        UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(holds)).sectionId();
         List<ConfirmSeatHoldCommand> confirmations = holdEverySeat(seatHolds, sectionId, holds);
         ConfirmSeatHoldService confirmSeatHold =
             new ConfirmSeatHoldService(seatHolds, clockAt(HOLD_PERIOD_ENDS.minusSeconds(1)));
