@@ -45,7 +45,7 @@ How TypeScript is written in `sdk/` and `examples/`, for everyone who writes or 
 | TS-16 | Generated files MUST live in `sdk/src/generated/`, MUST NOT be edited by hand, and MUST be regenerated in the change that changes their contract. | Review |
 | TS-17 | The SDK MUST NOT have a runtime dependency, and MUST reach Slot Gate only through `fetch`. | Review |
 | TS-18 | The SDK MUST send the ticket as `Authorization: Bearer <ticket>`, and MUST NOT send `X-Internal-User-Id`, because only the gateway sets it. | Test |
-| TS-19 | An SDK call MUST resolve with its typed response, or reject with an SDK error that carries the HTTP status and the stable `code` of the error response. | Test |
+| TS-19 | An SDK call MUST resolve with its typed response, or reject with an SDK error that carries the HTTP status and the stable `code` of the error response. An aborted signal MAY reject with its reason, and a failing `getTicket` with its own error, because both come from the caller. | Test |
 | TS-20 | A network failure and an unreadable response MUST reject with SDK errors of their own codes, distinct from the codes of Slot Gate. | Test |
 | TS-21 | Every export of the SDK MUST come from `sdk/src/index.ts`, with a documentation comment that has a one-sentence summary and one `@throws` line per error code. | Review |
 | TS-22 | The demo school MUST import the SDK by its package name only, never by a path into `sdk/`, because a school can do only that. | Review |
@@ -78,7 +78,7 @@ How TypeScript is written in `sdk/` and `examples/`, for everyone who writes or 
 | TS-34 | A package needed at run time MUST be in `dependencies`, and a tool only in `devDependencies`. | Review |
 | TS-35 | `pnpm-lock.yaml` MUST be committed, and continuous integration MUST install with `--frozen-lockfile`. | Review |
 | TS-36 | Build scripts of dependencies MUST stay blocked, except for a package allowed by name in `allowBuilds`, with its reason in a comment on the same line. | Review |
-| TS-37 | `minimumReleaseAge` MUST NOT be set below its default of one day, because a newer release has had less time to be checked by others. | Review |
+| TS-37 | `minimumReleaseAge` MUST NOT be set below its default of one day, because a newer release has had less time to be checked by others. `minimumReleaseAgeStrict` MUST be `true` and `minimumReleaseAgeExclude` MUST NOT be set, because pnpm otherwise exempts a young release on its own. | Review |
 | TS-45 | The root `package.json` MUST pin pnpm 11 in `packageManager` and require Node 24.12 or later in `engines.node`, because TS-02, TS-36 and TS-37 rely on them. | Review |
 
 ## Tests
