@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
@@ -44,6 +44,7 @@ import com.example.seatinventory.support.SectionFixtures;
  * and once with it. See ADR-0008. Truncates the tables, so run it alone and on demand:
  * {@code ./mvnw verify -Dit.test=SweepLoadScenario}
  */
+@RequiredArgsConstructor
 class SweepLoadScenario extends PostgresIntegrationTest {
 
     private static final int PRELOADED_SECTIONS = 1_000;
@@ -56,17 +57,13 @@ class SweepLoadScenario extends PostgresIntegrationTest {
     private static final Duration SWEEP_INTERVAL = Duration.ofSeconds(2);
     private static final String EXPIRY_INDEX = "seat_hold_held_expires_at_idx";
 
-    @Autowired
-    private OpenSectionUseCase openSection;
+    private final OpenSectionUseCase openSection;
 
-    @Autowired
-    private ReserveSeatUseCase reserveSeat;
+    private final ReserveSeatUseCase reserveSeat;
 
-    @Autowired
-    private ExpireSeatHoldsUseCase expireSeatHolds;
+    private final ExpireSeatHoldsUseCase expireSeatHolds;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     private record Call(Instant at, long latencyMicros) {
     }

@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,24 +26,20 @@ import com.example.seatinventory.application.port.in.ReserveSeatUseCase;
 import com.example.seatinventory.common.error.ErrorResponse;
 import com.example.seatinventory.support.PostgresIntegrationTest;
 
+@RequiredArgsConstructor
 class StudentHoldApiIT extends PostgresIntegrationTest {
 
     private static final String STUDENT_HOLDS = "/api/v1/seat-inventory/me/holds";
 
-    @Autowired
-    private TestRestTemplate rest;
+    private final TestRestTemplate rest;
 
-    @Autowired
-    private OpenSectionUseCase openSection;
+    private final OpenSectionUseCase openSection;
 
-    @Autowired
-    private ReserveSeatUseCase reserveSeat;
+    private final ReserveSeatUseCase reserveSeat;
 
-    @Autowired
-    private ConfirmSeatHoldUseCase confirmSeatHold;
+    private final ConfirmSeatHoldUseCase confirmSeatHold;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     @Test
     void listsTheHeldAndConfirmedSeatsOfTheCallingStudentByCode() {

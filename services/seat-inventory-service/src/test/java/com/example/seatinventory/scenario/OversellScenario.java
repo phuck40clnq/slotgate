@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Clock;
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -25,34 +25,27 @@ import com.example.seatinventory.support.SectionFixtures;
  * PRD failure scenario "two students compete for the last seat", with before and after numbers.
  * Not part of the build. Run it on demand: {@code ./mvnw verify -Dit.test=OversellScenario}
  */
+@RequiredArgsConstructor
 class OversellScenario extends PostgresIntegrationTest {
 
     private static final int SEATS = 10;
     private static final int CALLERS = 200;
 
-    @Autowired
-    private OpenSectionUseCase openSection;
+    private final OpenSectionUseCase openSection;
 
-    @Autowired
-    private SeatInventoryPort atomicSeatInventory;
+    private final SeatInventoryPort atomicSeatInventory;
 
-    @Autowired
-    private SeatHoldRepositoryPort seatHolds;
+    private final SeatHoldRepositoryPort seatHolds;
 
-    @Autowired
-    private IdGeneratorPort idGenerator;
+    private final IdGeneratorPort idGenerator;
 
-    @Autowired
-    private Clock clock;
+    private final Clock clock;
 
-    @Autowired
-    private HoldPeriod holdPeriod;
+    private final HoldPeriod holdPeriod;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
-    @Autowired
-    private TransactionTemplate transaction;
+    private final TransactionTemplate transaction;
 
     @Test
     void checkThenWriteOversells() {

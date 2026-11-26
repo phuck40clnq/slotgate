@@ -5,28 +5,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import com.example.seatinventory.application.port.out.SeatHoldRepositoryPort;
 import com.example.seatinventory.support.ConfirmExpiryRace;
+import com.example.seatinventory.support.ConfirmExpiryRace.Outcome;
+import com.example.seatinventory.support.PostgresIntegrationTest;
 
 /**
  * PRD failure scenario "phantom holds", second half: a student confirms at the moment the sweep expires the
  * hold. Each hold must end either confirmed with its seat or expired without it, and the student must be told
  * which. Not part of the build. Run it on demand: {@code ./mvnw verify -Dit.test=ConfirmExpiryRaceScenario}
  */
-class ConfirmExpiryRaceScenario extends ConfirmExpiryRace {
+@Import(ConfirmExpiryRace.class)
+@RequiredArgsConstructor
+class ConfirmExpiryRaceScenario extends PostgresIntegrationTest {
 
     private static final int HOLDS = 200;
     private static final int RUNS = 3;
 
-    @Autowired
-    private SeatHoldRepositoryPort conditionalSeatHolds;
+    private final ConfirmExpiryRace confirmExpiryRace;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final SeatHoldRepositoryPort conditionalSeatHolds;
+
+    private final JdbcClient jdbcClient;
 
     @Test
     void checkThenWriteBreaksTheOutcome() {
@@ -45,7 +50,7 @@ class ConfirmExpiryRaceScenario extends ConfirmExpiryRace {
 
     private List<Outcome> runAgainst(String label, SeatHoldRepositoryPort seatHolds) {
         return IntStream.rangeClosed(1, RUNS)
-            .mapToObj(run -> report(label, run, race(seatHolds, HOLDS)))
+            .mapToObj(run -> report(label, run, confirmExpiryRace.race(seatHolds, HOLDS)))
             .toList();
     }
 

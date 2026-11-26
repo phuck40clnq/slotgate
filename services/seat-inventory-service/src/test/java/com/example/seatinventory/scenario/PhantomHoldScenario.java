@@ -14,8 +14,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
@@ -34,6 +34,7 @@ import com.example.seatinventory.support.SectionFixtures;
  * after the holds expire. Not part of the build. Run it on demand: {@code ./mvnw verify -Dit.test=PhantomHoldScenario}
  */
 @TestPropertySource(properties = "seat-hold.ttl=PT1S")
+@RequiredArgsConstructor
 class PhantomHoldScenario extends PostgresIntegrationTest {
 
     private static final int SEATS = 10;
@@ -42,17 +43,13 @@ class PhantomHoldScenario extends PostgresIntegrationTest {
     private static final Duration RETRY_PAUSE = Duration.ofMillis(20);
     private static final UUID LATE_STUDENT_ID = new UUID(1, 0);
 
-    @Autowired
-    private OpenSectionUseCase openSection;
+    private final OpenSectionUseCase openSection;
 
-    @Autowired
-    private GetSectionUseCase getSection;
+    private final GetSectionUseCase getSection;
 
-    @Autowired
-    private ReserveSeatUseCase reserveSeat;
+    private final ReserveSeatUseCase reserveSeat;
 
-    @Autowired
-    private ExpireSeatHoldsUseCase expireSeatHolds;
+    private final ExpireSeatHoldsUseCase expireSeatHolds;
 
     @Test
     void withoutASweepAbandonedHoldsKeepTheSectionFull() {

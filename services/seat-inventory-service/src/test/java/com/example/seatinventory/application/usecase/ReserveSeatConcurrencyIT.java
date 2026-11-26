@@ -6,10 +6,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
@@ -19,16 +19,14 @@ import com.example.seatinventory.support.ParallelCallers;
 import com.example.seatinventory.support.PostgresIntegrationTest;
 import com.example.seatinventory.support.SectionFixtures;
 
+@RequiredArgsConstructor
 class ReserveSeatConcurrencyIT extends PostgresIntegrationTest {
 
-    @Autowired
-    private OpenSectionUseCase openSection;
+    private final OpenSectionUseCase openSection;
 
-    @Autowired
-    private ReserveSeatUseCase reserveSeat;
+    private final ReserveSeatUseCase reserveSeat;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     @ParameterizedTest(name = "{0} seats, {1} parallel callers")
     @CsvSource({"1, 2", "1, 200", "10, 200", "200, 200"})

@@ -6,9 +6,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import com.example.seatinventory.application.dto.ConfirmSeatHoldCommand;
@@ -20,21 +20,18 @@ import com.example.seatinventory.support.ParallelCallers;
 import com.example.seatinventory.support.PostgresIntegrationTest;
 import com.example.seatinventory.support.SectionFixtures;
 
+@RequiredArgsConstructor
 class ConfirmSeatHoldConcurrencyIT extends PostgresIntegrationTest {
 
     private static final UUID STUDENT_ID = new UUID(0, 1);
 
-    @Autowired
-    private OpenSectionUseCase openSection;
+    private final OpenSectionUseCase openSection;
 
-    @Autowired
-    private ReserveSeatUseCase reserveSeat;
+    private final ReserveSeatUseCase reserveSeat;
 
-    @Autowired
-    private ConfirmSeatHoldUseCase confirmSeatHold;
+    private final ConfirmSeatHoldUseCase confirmSeatHold;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     @ParameterizedTest(name = "{0} parallel confirmations of one hold")
     @ValueSource(ints = {2, 200})

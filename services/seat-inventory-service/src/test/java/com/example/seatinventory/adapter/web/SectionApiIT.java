@@ -7,8 +7,8 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,16 +23,15 @@ import com.example.seatinventory.common.error.ErrorResponse;
 import com.example.seatinventory.support.PostgresIntegrationTest;
 import com.example.seatinventory.support.SectionFixtures;
 
+@RequiredArgsConstructor
 class SectionApiIT extends PostgresIntegrationTest {
 
     private static final String SECTIONS = "/api/v1/seat-inventory/sections";
     private static final UUID OTHER_STUDENT_ID = UUID.fromString("00000000-0000-0000-0000-00000000000d");
 
-    @Autowired
-    private TestRestTemplate rest;
+    private final TestRestTemplate rest;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     @Test
     void opensSectionWithEverySeatLeft() {
