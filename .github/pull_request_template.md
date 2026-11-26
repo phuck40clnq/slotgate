@@ -65,7 +65,7 @@ $ ./mvnw verify
 - [ ] The pull request changes at most 400 lines (excluding generated files), or is a stated mechanical change
 
 ### Code quality
-- [ ] Code follows the [coding](https://github.com/phuck40clnq/slotgate/blob/main/docs/standards/coding.md) and [Java](https://github.com/phuck40clnq/slotgate/blob/main/docs/standards/java.md) standards
+- [ ] Code follows the [coding](https://github.com/phuck40clnq/slotgate/blob/main/docs/standards/coding.md) standard and the [Java](https://github.com/phuck40clnq/slotgate/blob/main/docs/standards/java.md) or [TypeScript](https://github.com/phuck40clnq/slotgate/blob/main/docs/standards/typescript.md) standard
 - [ ] No `TODO`/`FIXME`, dead code, commented-out code, empty stubs or placeholder files
 - [ ] No suppressed checks, or each suppression names the check and its reason on the same line
 - [ ] Everything this change replaces is removed (classes, configuration keys, dependencies, files, links)

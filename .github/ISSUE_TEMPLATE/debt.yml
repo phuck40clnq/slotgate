@@ -34,6 +34,7 @@ body:
       options:
         - coding standard (docs/standards/coding.md)
         - Java standard (docs/standards/java.md)
+        - TypeScript standard (docs/standards/typescript.md)
         - testing standard (docs/standards/testing.md)
         - core rules (docs/core/rules.md)
         - contract policies (contracts/)

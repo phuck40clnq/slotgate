@@ -107,7 +107,7 @@ reservedSeats++;
 | ID | Rule | Check |
 |---|---|---|
 | CODE-34 | Hosts, ports, credentials, timeouts and limits MUST come from configuration with a safe local default, never from literals in code. | Review |
-| CODE-35 | Dependency versions MUST live in one place per language, `platform/<language>/`. | Review |
+| CODE-35 | Dependency versions MUST live in one place per language: `platform/<language>/`, or the workspace file at the repository root when the package manager reads versions only there. | Review |
 | CODE-36 | A new dependency MUST state its reason in the pull request and MUST NOT duplicate one already in use. | Review |
 
 ## Debt
