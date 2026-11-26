@@ -1,0 +1,13 @@
+components:
+  parameters:
+    InternalUserId:
+      name: X-Internal-User-Id
+      in: header
+      required: true
+      description: >
+        The ID of the caller, which the gateway sets to the `sub` of the verified token, replacing any value the client
+        sent (API-16). A service trusts the caller only from this header (CORE-12).
+      schema:
+        type: string
+        format: uuid
+      example: "00000000-0000-0000-0000-00000000000a"
