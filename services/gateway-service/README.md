@@ -15,8 +15,8 @@ CORE-12 makes the gateway the only public entry, so token checks, identity, cros
 | `/api/seat-inventory/**` | `seat-inventory-service` at `/api/v1/seat-inventory/**` | Required |
 | `/api/test/**` | `test-service` at `/api/v1/test/**` | Not required |
 
-- Token checks and the `X-Internal-User-Id` header work as [authentication](../../docs/architecture/authentication.md) describes.
-- `GET /actuator/health` answers without a token; every other management path needs one.
+- Token checks, the paths that pass without a token or are refused, and the `X-Internal-User-Id` header work as [authentication](../../docs/architecture/authentication.md) describes.
+- Sections are opened on `seat-inventory-service` itself, not through the gateway, as [its README](../seat-inventory-service/README.md) shows.
 - Every error, including token, routing and network errors, is answered as an `ErrorResponse`, with `traceId` taken from the `X-Trace-Id` request header, or `N/A` without it.
 - Cross-origin requests are accepted from `http://localhost:3000`, with the methods `GET`, `POST`, `PUT`, `DELETE` and `OPTIONS`, the headers `Authorization` and `Content-Type`, and credentials.
 - The gateway publishes and consumes no event.
@@ -48,12 +48,12 @@ cd services/gateway-service
 
 The integration tests start the gateway on a random port, with stand-ins for `auth-service` and the services it routes to, so no other service needs to run:
 
-- `SecurityConfigIT`: `GET /actuator/health` answers without a token
+- `SecurityConfigIT`: `GET /actuator/health` answers without a token, and `POST /api/seat-inventory/sections` gets `403` with a token and `401` without one, while `GET` on the same path still reaches the service
 - `IdentityPropagationFilterIT`: a service receives the token subject in `X-Internal-User-Id`, never a value the client sent
 
 ## Details
 
 - Routes: `src/main/resources/application.yml`, and the local ports in `application-local.yml`
-- Public paths: `config/SecurityConfig.java`
+- Public and refused paths: `config/SecurityConfig.java`
 - Identity header: `filter/identity/IdentityPropagationFilter.java`
 - Why tokens are JWTs signed with RSA: [ADR-0003](../../docs/adr/0003-use-jwt-rsa.md)

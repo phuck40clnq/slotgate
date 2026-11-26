@@ -32,6 +32,10 @@ public class SecurityConfig {
                 .pathMatchers("/api/auth/**").permitAll()
                 .pathMatchers("/public/**").permitAll() // TODO: [LATER] Fix security config (remove public api)
                 .pathMatchers("/api/test/**").permitAll()
+                // A token names a student, and a student must not open a section. The route also forwards
+                // the path with a trailing slash, which these matchers treat as a different path.
+                .pathMatchers(HttpMethod.POST, "/api/seat-inventory/sections", "/api/seat-inventory/sections/")
+                .denyAll()
                 .pathMatchers("/api/**").authenticated() // Delete this line
                 .anyExchange().authenticated()
             )

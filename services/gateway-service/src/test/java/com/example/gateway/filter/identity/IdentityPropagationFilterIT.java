@@ -20,13 +20,13 @@ import org.springframework.test.context.DynamicPropertySource;
 
 import com.example.gateway.common.constants.HeaderConstants;
 import com.example.gateway.support.DownstreamEcho;
+import com.example.gateway.support.StudentFixtures;
 import com.example.gateway.support.TokenIssuer;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @RequiredArgsConstructor
 class IdentityPropagationFilterIT {
 
-    private static final String STUDENT_ID = "00000000-0000-0000-0000-00000000000a";
     private static final String FORGED_STUDENT_ID = "00000000-0000-0000-0000-00000000000f";
 
     private static final DownstreamEcho DOWNSTREAM = DownstreamEcho.start(HeaderConstants.X_INTERNAL_User_Id);
@@ -62,13 +62,13 @@ class IdentityPropagationFilterIT {
     @Test
     void replacesIdentityThatClientSendsWithTokenSubject() {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(ISSUER.issueFor(STUDENT_ID));
+        headers.setBearerAuth(ISSUER.issueFor(StudentFixtures.STUDENT_ID));
         headers.set(HeaderConstants.X_INTERNAL_User_Id, FORGED_STUDENT_ID);
 
         ResponseEntity<String> forwarded = get("/api/user/echo", headers);
 
         assertThat(forwarded.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(forwarded.getBody()).isEqualTo(STUDENT_ID);
+        assertThat(forwarded.getBody()).isEqualTo(StudentFixtures.STUDENT_ID);
     }
 
     private ResponseEntity<String> get(String path, HttpHeaders headers) {
