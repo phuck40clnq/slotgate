@@ -17,7 +17,6 @@ The repository of Slot Gate, a course registration platform shared by many schoo
 | [`user-service`](services/user-service/README.md) | 8083 | User profiles; consumes `UserRegistered` |
 | [`seat-inventory-service`](services/seat-inventory-service/README.md) | 8084 | Sections and seat holds that never exceed capacity, with confirmation and expiry |
 | [`test-service`](services/test-service/README.md) | 6868 | Sandbox for routing, contract and event experiments |
-| [`frontend/web/`](frontend/web/README.md) | | Web client: login, registration, profile |
 | [`contracts/`](contracts/README.md) | | OpenAPI and Avro contracts between services and clients |
 | [`platform/java/`](platform/java/README.md) | | Shared build baseline of Java services |
 | [`templates/spring-boot-service/`](templates/spring-boot-service/README.md) | | Template every Java service is copied from |

@@ -40,7 +40,7 @@ Every binding document writes its rules the way this section does.
 | Weekly reports | `docs/weekly/` | What one week achieved | Record |
 | Product requirements | `docs/prd-2026-10-17.pdf` | The scope first agreed with the supervisor | Record |
 
-A component is the repository root, `contracts/`, or a folder directly under `services/`, `platform/`, `templates/`, `frontend/` or `infrastructure/`. Binding documents decide, descriptions explain the system as it is, and records keep the facts and reasoning of their time.
+A component is the repository root, `contracts/`, or a folder directly under `services/`, `platform/`, `templates/` or `infrastructure/`. Binding documents decide, descriptions explain the system as it is, and records keep the facts and reasoning of their time.
 
 | ID | Rule | Check |
 |---|---|---|

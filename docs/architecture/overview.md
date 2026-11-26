@@ -6,7 +6,7 @@ How the components of Slot Gate work together today, for anyone changing more th
 
 ```mermaid
 flowchart LR
-    client([Web client]) -->|/api/...| gateway[gateway-service :8080]
+    client([Client]) -->|/api/...| gateway[gateway-service :8080]
     gateway -->|/api/v1/auth| auth[auth-service :8082]
     gateway -->|/api/v1/user| user[user-service :8083]
     gateway -->|/api/v1/seat-inventory| seats[seat-inventory-service :8084]
