@@ -42,7 +42,7 @@ Each service with state owns one PostgreSQL database and role, following CORE-10
 
 | Service | Database | Schema changes |
 |---|---|---|
-| `auth-service` | `slotgate_auth` | Generated from the entities at start-up; only validated in `prod` |
+| `auth-service` | `slotgate_auth` | Versioned migrations |
 | `user-service` | `slotgate_user` | Generated from the entities at start-up; only validated in `prod` |
 | `seat-inventory-service` | `slotgate_seat_inventory` | Versioned migrations |
 

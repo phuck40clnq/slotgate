@@ -1,0 +1,9 @@
+app:
+  security:
+    jwt:
+      # No test verifies a token against a key set, so the issuer only needs a value.
+      issuer: http://localhost/unused-jwks
+
+logging:
+  level:
+    '[com.example]': WARN
