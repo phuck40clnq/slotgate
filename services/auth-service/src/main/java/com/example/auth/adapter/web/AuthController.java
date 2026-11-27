@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * REST controller for authentication-related operations.
  * <p>
- * Exposes endpoints for user registration, login, and token refresh.
+ * Exposes endpoints for user registration and login.
  * Delegates business logic to the corresponding use case classes.
  * </p>
  */
@@ -27,7 +27,6 @@ public class AuthController {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUserUseCase    loginUserUseCase;
-    private final RefreshTokenUseCase refreshTokenUseCase;
 
     /**
      * Registers a new user.
@@ -52,19 +51,6 @@ public class AuthController {
     public TokenResponse login(@RequestBody LoginRequest request) {
         LoginUserCommand command = new LoginUserCommand(request.email(), request.password());
         LoginUserResult result = loginUserUseCase.login(command);
-        return new TokenResponse(result.token());
-    }
-
-    /**
-     * Refreshes an existing access token using a refresh token.
-     *
-     * @param request the refresh token request
-     * @return a {@link TokenResponse} with the new access token
-     */
-    @PostMapping("/refresh")
-    public TokenResponse refresh(@RequestBody RefreshTokenRequest request) {
-        RefreshTokenCommand command = new RefreshTokenCommand(request.refreshToken());
-        RefreshTokenResult result = refreshTokenUseCase.refresh(command);
         return new TokenResponse(result.token());
     }
 }

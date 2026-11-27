@@ -57,12 +57,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-        <!-- TODO: [LATER] Improve this later -->
-        <!-- Oauth - Include JWT inside -->
-        <!-- <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-oauth2-authorization-server</artifactId>
-        </dependency> -->
         <!-- JWT / JWK / JOST (Nimbus) -->
         <dependency>
             <groupId>org.springframework.security</groupId>

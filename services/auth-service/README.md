@@ -16,13 +16,13 @@ Credentials stay in one service, so no other service ever sees a password. It ow
 | `UserRegistered` | `auth-user-events` | A user registers |
 | `UserLoggedIn` | `auth-security-events` | A user signs in |
 
-The service also listens to `auth-auth-events`, which nothing in the repository publishes.
+The service consumes no event.
 
 ## Configuration
 
 | Variable | Meaning |
 |---|---|
-| `SERVICE_NAME` | Name in logs and Kafka consumer group; defaults to `auth-service` |
+| `SERVICE_NAME` | Name in logs; defaults to `auth-service` |
 | `PORT` | HTTP port; defaults to `8082` |
 | `SPRING_PROFILES_ACTIVE` | `local` for the local database and Kafka at `localhost:9092` |
 | `DB_NAME`, `DB_USER`, `DB_PASS` | Database `slotgate_auth`; the `local` defaults match `infrastructure/postgres/` |
