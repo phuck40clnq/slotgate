@@ -25,7 +25,7 @@ The service also listens to `auth-auth-events`, which nothing in the repository 
 | `SERVICE_NAME` | Name in logs and Kafka consumer group; defaults to `auth-service` |
 | `PORT` | HTTP port; defaults to `8082` |
 | `SPRING_PROFILES_ACTIVE` | `local` for the local database and Kafka at `localhost:9092` |
-| `DB_NAME`, `DB_USER`, `DB_PASS` | Database `slotgate_auth`; the `local` defaults match `infrastructure/postgres/` |
+| `DB_NAME`, `DB_USER`, `DB_PASS` | Database `slotgate_auth`; only `local` has defaults, which match `infrastructure/postgres/` |
 | `OAUTH_JWK_SET_URI` | Written into the `iss` claim of every token; required, without default |
 | `SCHEMA_REGISTRY_URL` | Schema Registry; defaults to `http://localhost:8081` |
 
@@ -51,6 +51,7 @@ This needs no Docker and no running database: the integration tests start their 
 
 - `MigrationIT`: the service applies every migration at start-up
 - `AuthUserPersistenceAdapterIT`: a user is found by email, and a second user with the same email is rejected
+- `DatabaseCredentialsIT`: `dev` and `prod` take the database and its credentials from the environment only
 
 ## Details
 

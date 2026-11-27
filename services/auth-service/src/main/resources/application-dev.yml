@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://staging-db-server:5432/${DB_NAME:myapp_db}
-    username: ${DB_USER:dev}
-    password: ${DB_PASS:dev}
+    url: jdbc:postgresql://staging-db-server:5432/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASS}
     driver-class-name: org.postgresql.Driver
 
   jpa:
