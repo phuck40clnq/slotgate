@@ -5,7 +5,7 @@ import lombok.NonNull;
 /**
  * Response DTO representing an authentication token.
  * <p>
- * Returned by login, registration, or refresh endpoints to the client.
+ * Returned by the login and registration endpoints to the client.
  * Contains the access token used for subsequent authenticated requests.
  * </p>
  */

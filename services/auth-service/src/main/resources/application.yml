@@ -6,11 +6,6 @@ spring:
 
   application:
     name: ${SERVICE_NAME:auth-service}
-  # TODO: [LATER]
-  # security:
-  #   oauth2:
-  #     authorizationserver:
-  #       issuer: ${OAUTH2_ISSUER_URI}
 
   kafka:
     producer:
@@ -18,16 +13,6 @@ spring:
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         '[schema.registry.url]': ${SCHEMA_REGISTRY_URL:http://localhost:8081}
-        '[value.subject.name.strategy]': io.confluent.kafka.serializers.subject.RecordNameStrategy
-    
-    consumer:
-      group-id: ${SERVICE_NAME:auth-service}
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-      properties:
-        '[schema.registry.url]': ${SCHEMA_REGISTRY_URL:http://localhost:8081}
-        '[specific.avro.reader]': false
         '[value.subject.name.strategy]': io.confluent.kafka.serializers.subject.RecordNameStrategy
 
 server:

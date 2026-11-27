@@ -34,7 +34,6 @@ Events are Avro records, defined in `contracts/avro/` and registered in Schema R
 |---|---|---|---|
 | `UserRegistered` | `auth-user-events` | `auth-service` | `user-service` |
 | `UserLoggedIn` | `auth-security-events` | `auth-service` | None |
-| Any | `auth-auth-events` | None in this repository | `auth-service` |
 
 ## Data
 

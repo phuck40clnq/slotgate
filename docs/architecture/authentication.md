@@ -25,7 +25,6 @@ sequenceDiagram
 |---|---|
 | `POST /api/v1/auth/register` | Creates a user with a BCrypt hash of the password, publishes `UserRegistered`, returns an access token |
 | `POST /api/v1/auth/login` | Checks the password, publishes `UserLoggedIn`, returns an access token |
-| `POST /api/v1/auth/refresh` | Returns the fixed string `fake-refreshed-token` and issues no token |
 | `GET /oauth2/jwks` | Serves the public key as a JSON Web Key Set |
 
 ## Access token
