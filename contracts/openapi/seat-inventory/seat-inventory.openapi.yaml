@@ -2,13 +2,17 @@ openapi: 3.0.3
 info:
   title: Seat Inventory API
   version: 1.0.0
-  description: Sections and their seats. Reachable through the gateway only.
+  description: >
+    Sections and their seats. Students reach it through the gateway only, at `/api/seat-inventory` instead of
+    `/api/v1/seat-inventory`, so their operations also list the errors that the gateway answers itself.
 
 paths:
   /api/v1/seat-inventory/sections:
     get:
       operationId: listSections
       summary: List every section with the seats left, ordered by code
+      security:
+        - studentToken: []
       responses:
         "200":
           description: Sections found, possibly none
@@ -16,9 +20,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SectionsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
     post:
       operationId: openSection
       summary: Open a section with a code, a title and a fixed number of seats
+      description: >
+        Called from inside the platform, never through the gateway, which answers a student token with `403`
+        (`GATEWAY_403`). It declares no security scheme, because no caller of it has a credential yet. A second
+        request with the same code, also a concurrent one or a retry after a lost response, opens nothing and gets
+        `409`.
+      security: []
       requestBody:
         required: true
         content:
@@ -33,9 +53,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/SectionResponse"
         "400":
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/InvalidRequest"
         "409":
           description: Another section already has this code (`SECTION_CODE_TAKEN`)
+          content:
+            application/json:
+              schema:
+                $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: An infrastructure failure the caller cannot fix (`INTERNAL_ERROR`)
           content:
             application/json:
               schema:
@@ -45,6 +71,8 @@ paths:
     get:
       operationId: getSection
       summary: Read a section and the seats left
+      security:
+        - studentToken: []
       parameters:
         - $ref: "#/components/parameters/SectionId"
       responses:
@@ -55,9 +83,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/SectionResponse"
         "400":
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/SectionNotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
 
   /api/v1/seat-inventory/sections/{sectionId}/holds:
     post:
@@ -68,9 +106,11 @@ paths:
         A student has at most one held or confirmed seat per section: repeating the request, also concurrently or
         as a retry after a lost response, returns the hold the student already has. A new hold expires at
         `expiresAt` unless the student confirms it before; once it has expired, the student can hold again.
+      security:
+        - studentToken: []
       parameters:
         - $ref: "#/components/parameters/SectionId"
-        - $ref: "#/components/parameters/StudentId"
+        - $ref: "./../headers/headers.openapi.yaml#/components/parameters/InternalUserId"
       responses:
         "200":
           description: The student already holds a seat in this section; the existing hold is returned
@@ -85,11 +125,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/SeatHoldResponse"
         "400":
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/SectionNotFound"
         "409":
-          $ref: "#/components/responses/Error"
+          description: The section has no seats left (`SECTION_FULL`)
+          content:
+            application/json:
+              schema:
+                $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
 
   /api/v1/seat-inventory/sections/{sectionId}/holds/{holdId}/confirmation:
     post:
@@ -98,10 +152,12 @@ paths:
       description: >
         A confirmed hold keeps its seat and no longer expires. Repeating the request, also concurrently or as a
         retry after a lost response, returns the confirmed hold.
+      security:
+        - studentToken: []
       parameters:
         - $ref: "#/components/parameters/SectionId"
         - $ref: "#/components/parameters/HoldId"
-        - $ref: "#/components/parameters/StudentId"
+        - $ref: "./../headers/headers.openapi.yaml#/components/parameters/InternalUserId"
       responses:
         "200":
           description: Hold confirmed
@@ -110,7 +166,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/SeatHoldResponse"
         "400":
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           description: No such hold of the calling student in this section (`HOLD_NOT_FOUND`)
           content:
@@ -123,6 +181,14 @@ paths:
             application/json:
               schema:
                 $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
 
   /api/v1/seat-inventory/me/holds:
     get:
@@ -132,8 +198,10 @@ paths:
         A hold is current while it is confirmed, or held and before its `expiresAt`. A held hold leaves the list
         once its `expiresAt` passes, even before its seat goes back to the section, since it can no longer be
         confirmed.
+      security:
+        - studentToken: []
       parameters:
-        - $ref: "#/components/parameters/StudentId"
+        - $ref: "./../headers/headers.openapi.yaml#/components/parameters/InternalUserId"
       responses:
         "200":
           description: Current holds, possibly none
@@ -142,38 +210,96 @@ paths:
               schema:
                 $ref: "#/components/schemas/StudentHoldsResponse"
         "400":
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
 
 components:
+  securitySchemes:
+    studentToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        A student's token, signed by `auth-service`. The gateway verifies it and passes its `sub` in
+        `X-Internal-User-Id`, the only place this service reads the caller from; the service does not check the token.
+
   parameters:
     SectionId:
       name: sectionId
       in: path
       required: true
+      description: The ID of the section
       schema:
         type: string
         format: uuid
+      example: "6f1c2b9e-3d4a-4c8e-9a51-2e7d0b6c4f13"
 
     HoldId:
       name: holdId
       in: path
       required: true
+      description: The ID of a hold of the calling student in this section
       schema:
         type: string
         format: uuid
-
-    StudentId:
-      name: X-Internal-User-Id
-      in: header
-      required: true
-      description: Student identity, set by the gateway
-      schema:
-        type: string
-        format: uuid
+      example: "b2d4e6f8-1a3c-4e5f-8a7b-9c0d1e2f3a4b"
 
   responses:
-    Error:
-      description: Error with a stable, machine-readable code
+    InvalidRequest:
+      description: The request breaks this contract, such as a missing field or a malformed ID (`INVALID_REQUEST`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: The gateway found no valid student token (`GATEWAY_401`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    SectionNotFound:
+      description: No section has this ID (`SECTION_NOT_FOUND`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    InternalError:
+      description: >
+        An infrastructure failure the caller cannot fix, in this service (`INTERNAL_ERROR`) or in the gateway
+        (`GATEWAY_500`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    BadGateway:
+      description: The gateway could not connect to this service (`GATEWAY_502`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    ServiceUnavailable:
+      description: The gateway knows no instance of this service; the caller may retry later (`GATEWAY_503`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    GatewayTimeout:
+      description: The connection to this service, or its answer, timed out at the gateway (`GATEWAY_504`)
       content:
         application/json:
           schema:
@@ -191,15 +317,22 @@ components:
           type: string
           minLength: 1
           maxLength: 32
-          description: Unique among all sections, for example a course code and a group number
+          pattern: '\S'
+          description: Unique among all sections, for example a course code and a group number; not only spaces
+          example: "SIM101 1"
         title:
           type: string
           minLength: 1
           maxLength: 200
+          pattern: '\S'
+          description: The title of the section, such as the name of its course; not only spaces
+          example: "Introduction to Programming"
         capacity:
           type: integer
           format: int32
           minimum: 1
+          description: The number of seats, fixed once the section is open
+          example: 60
 
     SectionResponse:
       type: object
@@ -213,16 +346,34 @@ components:
         sectionId:
           type: string
           format: uuid
+          description: The ID of the section
+          example: "6f1c2b9e-3d4a-4c8e-9a51-2e7d0b6c4f13"
         code:
           type: string
+          minLength: 1
+          maxLength: 32
+          description: Unique among all sections
+          example: "SIM101 1"
         title:
           type: string
+          minLength: 1
+          maxLength: 200
+          description: The title of the section, such as the name of its course
+          example: "Introduction to Programming"
         capacity:
           type: integer
           format: int32
+          minimum: 1
+          description: The number of seats
+          example: 60
         seatsLeft:
           type: integer
           format: int32
+          minimum: 0
+          description: >
+            The capacity minus the seats of held and confirmed holds. A hold that expired keeps its seat until the
+            sweep gives it back.
+          example: 42
 
     SectionsResponse:
       type: object
@@ -231,8 +382,15 @@ components:
       properties:
         sections:
           type: array
+          description: Every section, ordered by code
           items:
             $ref: "#/components/schemas/SectionResponse"
+          example:
+            - sectionId: "6f1c2b9e-3d4a-4c8e-9a51-2e7d0b6c4f13"
+              code: "SIM101 1"
+              title: "Introduction to Programming"
+              capacity: 60
+              seatsLeft: 42
 
     SeatHoldResponse:
       type: object
@@ -247,25 +405,36 @@ components:
         holdId:
           type: string
           format: uuid
+          description: The ID of the hold
+          example: "b2d4e6f8-1a3c-4e5f-8a7b-9c0d1e2f3a4b"
         sectionId:
           type: string
           format: uuid
+          description: The ID of the section the seat is in
+          example: "6f1c2b9e-3d4a-4c8e-9a51-2e7d0b6c4f13"
         studentId:
           type: string
           format: uuid
+          description: The ID of the student who holds the seat, as in `X-Internal-User-Id`
+          example: "00000000-0000-0000-0000-00000000000a"
         heldAt:
           type: string
           format: date-time
+          description: When the seat was held, in UTC
+          example: "2026-11-26T08:00:00Z"
         expiresAt:
           type: string
           format: date-time
           description: When a hold that is still `HELD` gives its seat back. Ignored once the hold is `CONFIRMED`.
+          example: "2026-11-26T08:05:00Z"
         status:
           type: string
+          description: "`HELD` until the student confirms the hold, then `CONFIRMED`, or `EXPIRED` once it expires"
           enum:
             - HELD
             - CONFIRMED
             - EXPIRED
+          example: HELD
 
     StudentHoldsResponse:
       type: object
@@ -274,8 +443,17 @@ components:
       properties:
         holds:
           type: array
+          description: The current holds of the student, ordered by section code
           items:
             $ref: "#/components/schemas/StudentHoldResponse"
+          example:
+            - holdId: "b2d4e6f8-1a3c-4e5f-8a7b-9c0d1e2f3a4b"
+              sectionId: "6f1c2b9e-3d4a-4c8e-9a51-2e7d0b6c4f13"
+              sectionCode: "SIM101 1"
+              sectionTitle: "Introduction to Programming"
+              heldAt: "2026-11-26T08:00:00Z"
+              expiresAt: "2026-11-26T08:05:00Z"
+              status: HELD
 
     StudentHoldResponse:
       type: object
@@ -291,22 +469,39 @@ components:
         holdId:
           type: string
           format: uuid
+          description: The ID of the hold
+          example: "b2d4e6f8-1a3c-4e5f-8a7b-9c0d1e2f3a4b"
         sectionId:
           type: string
           format: uuid
+          description: The ID of the section the seat is in
+          example: "6f1c2b9e-3d4a-4c8e-9a51-2e7d0b6c4f13"
         sectionCode:
           type: string
+          minLength: 1
+          maxLength: 32
+          description: The code of the section
+          example: "SIM101 1"
         sectionTitle:
           type: string
+          minLength: 1
+          maxLength: 200
+          description: The title of the section
+          example: "Introduction to Programming"
         heldAt:
           type: string
           format: date-time
+          description: When the seat was held, in UTC
+          example: "2026-11-26T08:00:00Z"
         expiresAt:
           type: string
           format: date-time
           description: When a hold that is still `HELD` leaves the list. Ignored once the hold is `CONFIRMED`.
+          example: "2026-11-26T08:05:00Z"
         status:
           type: string
+          description: "`HELD` until the student confirms the hold, then `CONFIRMED`"
           enum:
             - HELD
             - CONFIRMED
+          example: HELD

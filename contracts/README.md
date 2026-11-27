@@ -12,6 +12,7 @@ Services share no code and may use different languages, so these language-neutra
 |---|---|---|
 | `openapi/<service>/` | One OpenAPI 3 file per service | [API standard](../docs/standards/api.md) |
 | `openapi/error/` | The `ErrorResponse` that every error response uses | API-17 to API-21 |
+| `openapi/headers/` | The custom request headers that contracts reference, such as `X-Internal-User-Id` | API-15 and API-16 |
 | `avro/<owning service>/events/` | One Avro schema per event | [Event standard](../docs/standards/events.md) |
 
 ## Details
