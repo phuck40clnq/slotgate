@@ -23,6 +23,7 @@ The repository of Slot Gate, a course registration platform shared by many schoo
 | [`templates/spring-boot-service/`](templates/spring-boot-service/README.md) | | Template every Java service is copied from |
 | [`infrastructure/postgres/`](infrastructure/postgres/README.md) | 5432 | One PostgreSQL database and role per service |
 | [`infrastructure/kafka/`](infrastructure/kafka/README.md) | 9092, 8081, 2181 | Kafka, Schema Registry and ZooKeeper |
+| [`infrastructure/load-tests/`](infrastructure/load-tests/README.md) | | k6 scripts that measure the services under load |
 
 How the components work together is in the [architecture overview](docs/architecture/overview.md). A new service takes the next free port and is added to this table.
 
