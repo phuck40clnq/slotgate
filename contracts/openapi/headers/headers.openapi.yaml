@@ -11,3 +11,17 @@ components:
         type: string
         format: uuid
       example: "00000000-0000-0000-0000-00000000000a"
+
+    OptionalInternalUserId:
+      name: X-Internal-User-Id
+      in: header
+      required: false
+      description: >
+        The same header as `InternalUserId`, on a route where the gateway asks for no token. There the gateway
+        removes any value the client sent, also with a valid token, so the header is absent through the gateway and
+        present only when a caller inside the platform sets it. A service trusts the caller only from this header
+        (CORE-12).
+      schema:
+        type: string
+        format: uuid
+      example: "00000000-0000-0000-0000-00000000000a"
