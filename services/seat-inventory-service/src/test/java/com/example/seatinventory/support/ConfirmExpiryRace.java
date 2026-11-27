@@ -11,7 +11,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.test.context.TestComponent;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -32,27 +33,25 @@ import com.example.seatinventory.domain.model.HoldPeriod;
  * Lets one sweep race the confirmations of every hold in a section. Every hold qualifies for both: the
  * confirmations run one second before the hold period ends, the sweep one second after. The sweep starts once
  * half of the confirmations have returned, so that the other half are in flight while it runs; started with
- * the others, a single fast sweep either beat every confirmation or came after all of them.
+ * the others, a single fast sweep either beat every confirmation or came after all of them. A test imports
+ * it as a bean and receives it through its constructor.
  */
-public abstract class ConfirmExpiryRace extends PostgresIntegrationTest {
+@TestComponent
+@RequiredArgsConstructor
+public class ConfirmExpiryRace {
 
     private static final Instant HOLD_PERIOD_ENDS = Instant.parse("2026-11-14T12:00:00Z");
     private static final Duration HOLD_PERIOD = Duration.ofMinutes(5);
 
-    @Autowired
-    private OpenSectionUseCase openSection;
+    private final OpenSectionUseCase openSection;
 
-    @Autowired
-    private SeatInventoryPort seatInventory;
+    private final SeatInventoryPort seatInventory;
 
-    @Autowired
-    private IdGeneratorPort idGenerator;
+    private final IdGeneratorPort idGenerator;
 
-    @Autowired
-    private TransactionTemplate transaction;
+    private final TransactionTemplate transaction;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     /**
      * What the callers were told and what the database holds afterwards. Correct when every hold ended either
@@ -72,7 +71,7 @@ public abstract class ConfirmExpiryRace extends PostgresIntegrationTest {
         }
     }
 
-    protected Outcome race(SeatHoldRepositoryPort seatHolds, int holds) {
+    public Outcome race(SeatHoldRepositoryPort seatHolds, int holds) {
         UUID sectionId = openSection.openSection(SectionFixtures.openSectionCommand(holds)).sectionId();
         List<ConfirmSeatHoldCommand> confirmations = holdEverySeat(seatHolds, sectionId, holds);
         ConfirmSeatHoldService confirmSeatHold =

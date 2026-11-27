@@ -7,9 +7,9 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
+import lombok.RequiredArgsConstructor;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import com.example.seatinventory.domain.model.Section;
@@ -19,16 +19,15 @@ import com.example.seatinventory.support.PostgresIntegrationTest;
  * Runs the migrations over rows that an earlier version stored, which the empty database of the other tests
  * never does. Uses a schema of its own, so the tables of the other tests stay untouched.
  */
+@RequiredArgsConstructor
 class MigrationIT extends PostgresIntegrationTest {
 
     private static final String SCHEMA = "migration_test";
     private static final UUID OLD_SECTION_ID = UUID.fromString("00000000-0000-0000-0000-0000000000a1");
 
-    @Autowired
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     @Test
     void givesSectionsOpenedBeforeCodesExistedACodeTheServiceCanRead() {

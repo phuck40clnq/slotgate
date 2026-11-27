@@ -6,10 +6,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import com.example.seatinventory.application.dto.ReserveSeatCommand;
@@ -24,19 +24,17 @@ import com.example.seatinventory.support.SectionFixtures;
  * one hold, whether they arrive together or as a retry after a lost response.
  * Not part of the build. Run it on demand: {@code ./mvnw verify -Dit.test=DoubleClickScenario}
  */
+@RequiredArgsConstructor
 class DoubleClickScenario extends PostgresIntegrationTest {
 
     private static final int SEATS = 10;
     private static final UUID STUDENT_ID = new UUID(0, 1);
 
-    @Autowired
-    private OpenSectionUseCase openSection;
+    private final OpenSectionUseCase openSection;
 
-    @Autowired
-    private ReserveSeatUseCase reserveSeat;
+    private final ReserveSeatUseCase reserveSeat;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     @Test
     void retryAfterALostResponseKeepsOneHold() {

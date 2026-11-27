@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
@@ -18,13 +18,12 @@ import com.example.seatinventory.domain.model.Section;
 import com.example.seatinventory.support.PostgresIntegrationTest;
 import com.example.seatinventory.support.SectionFixtures;
 
+@RequiredArgsConstructor
 class SeatInventoryPersistenceAdapterIT extends PostgresIntegrationTest {
 
-    @Autowired
-    private SeatInventoryPort seatInventory;
+    private final SeatInventoryPort seatInventory;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     @Test
     void savesASectionWithItsCodeAndTitle() {

@@ -9,8 +9,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
@@ -22,20 +22,18 @@ import com.example.seatinventory.domain.model.Section;
 import com.example.seatinventory.support.PostgresIntegrationTest;
 import com.example.seatinventory.support.SectionFixtures;
 
+@RequiredArgsConstructor
 class SeatHoldPersistenceAdapterIT extends PostgresIntegrationTest {
 
     private static final UUID STUDENT_ID = UUID.fromString("00000000-0000-0000-0000-00000000000b");
     private static final Instant HELD_AT = Instant.parse("2026-11-06T12:00:00Z");
     private static final Instant EXPIRES_AT = HELD_AT.plus(Duration.ofMinutes(5));
 
-    @Autowired
-    private SeatHoldRepositoryPort seatHolds;
+    private final SeatHoldRepositoryPort seatHolds;
 
-    @Autowired
-    private SeatInventoryPort seatInventory;
+    private final SeatInventoryPort seatInventory;
 
-    @Autowired
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     @Test
     void savesHoldOfAStudentInAKnownSection() {
