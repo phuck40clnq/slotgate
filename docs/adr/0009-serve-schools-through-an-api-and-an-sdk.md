@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -51,10 +51,10 @@ The API key, the ticket request and the webhook get their own contracts.
 A fictional demo school plays the customer:
 
 - It uses the SDK and the API as a real school would, and its name, logo and colours are ours.
-- Its pages follow the registration flow of `<reference school>` as closely as possible, rebuilt from nothing.
+- Its pages follow the course registration flow of Vietnam National University, Hanoi (VNU), at `dangkyhoc.vnu.edu.vn`, as closely as possible, rebuilt from nothing.
 - It copies no markup, style sheet, script, image, icon, font, logo or verbatim text of that school.
 - Nobody accesses that school's site automatically, stores its responses or uses its data, and no load test ever targets it.
-- Its README in English and the footer of every page in Vietnamese credit the source: "Bản mô phỏng để test, dựa theo luồng đăng ký học của `<reference school>`. Không phải trang chính thức, không liên kết với trường. Dữ liệu tự sinh."
+- Its README in English and the footer of every page in Vietnamese credit the source: "Bản mô phỏng để test, dựa theo luồng đăng ký học của Đại học Quốc gia Hà Nội (dangkyhoc.vnu.edu.vn). Không phải trang chính thức, không liên kết với ĐHQGHN. Dữ liệu tự sinh."
 
 The public demo, when it exists, is a sandbox with a connection guide and the demo school as a sample app that developers run themselves. The demo school is never hosted publicly, because its pages follow a real school's flow.
 
