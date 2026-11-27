@@ -1,4 +1,9 @@
 spring:
+  # The schema comes from the Flyway migrations only; Hibernate checks that the entities match it.
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
   application:
     name: ${SERVICE_NAME:auth-service}
   # TODO: [LATER]

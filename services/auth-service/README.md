@@ -47,10 +47,14 @@ cd services/auth-service
 ./mvnw verify
 ```
 
-The only test checks that the application starts.
+This needs no Docker and no running database: the integration tests start their own PostgreSQL ([ADR-0004](../../docs/adr/0004-run-integration-tests-on-embedded-postgresql.md)) and their own signing keys.
+
+- `MigrationIT`: the service applies every migration at start-up
+- `AuthUserPersistenceAdapterIT`: a user is found by email, and a second user with the same email is rejected
 
 ## Details
 
 - Why tokens are JWTs signed with RSA: [ADR-0003](../../docs/adr/0003-use-jwt-rsa.md)
 - Signing: `infrastructure/security/jwt/`
 - Events: `infrastructure/messaging/kafka/producer/`
+- Schema: Flyway migrations in `src/main/resources/db/migration/`, applied at start-up; Hibernate only validates the entities against them, in every profile (SVC-14)
