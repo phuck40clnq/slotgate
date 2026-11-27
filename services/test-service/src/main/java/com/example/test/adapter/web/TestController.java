@@ -1,52 +1,45 @@
 package com.example.test.adapter.web;
 
-import java.util.Map;
+import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.test.adapter.web.dto.CallerResponse;
+import com.example.test.common.error.TestBusinessErrorCode;
+import com.example.test.common.exception.BusinessException;
 
 @RestController
-@RequestMapping("api/v1/test")
+@RequestMapping("/api/v1/test")
 public class TestController {
-    
-    @GetMapping("/hello")
-    public Map<String, String> hello(
-            @RequestHeader(value = "X-User-Id", required = true) String userId
-    ) {
-        return Map.of(
-            "userId", String.valueOf(userId)
-        );
+
+    private static final String INTERNAL_USER_ID = "X-Internal-User-Id";
+
+    @GetMapping(path = "/me", headers = INTERNAL_USER_ID)
+    public CallerResponse getCaller(@RequestHeader(INTERNAL_USER_ID) UUID userId) {
+        return new CallerResponse(userId);
     }
 
-    @GetMapping("/error-400")
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> badRequest() {
-        return Map.of(
-            "code", "INVALID_INPUT",
-            "message", "Input is invalid"
-        );
+    @GetMapping(path = "/me", headers = "!" + INTERNAL_USER_ID)
+    public ResponseEntity<Void> getCallerWithoutId() {
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/error-404")
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> notFound() {
-        return Map.of(
-            "code", "USER_NOT_FOUND",
-            "message", "User not found"
-        );
+    @GetMapping("/errors/bad-request")
+    public void simulateBadRequest() {
+        throw new BusinessException(TestBusinessErrorCode.SIMULATED_BAD_REQUEST);
     }
 
-    @GetMapping("/error-500")
-    public void serverError() {
-        throw new RuntimeException(
-            "Simulated internal crash"
-        );
+    @GetMapping("/errors/not-found")
+    public void simulateNotFound() {
+        throw new BusinessException(TestBusinessErrorCode.SIMULATED_NOT_FOUND);
     }
-    
 
+    @GetMapping("/errors/internal")
+    public void simulateInternalError() {
+        throw new IllegalStateException("Simulated failure that no rule expects");
+    }
 }

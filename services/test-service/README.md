@@ -8,16 +8,14 @@ A change to routing or to the shared setup can be tried here without touching a 
 
 ## API and events
 
-The gateway routes `/api/test/**` here without asking for a token.
+The contract is [`test.openapi.yaml`](../../contracts/openapi/test/test.openapi.yaml), with every status and error code. The gateway routes `/api/test/**` to `/api/v1/test/**` here without asking for a token, and without a caller ID, as the [authentication design](../../docs/architecture/authentication.md) describes.
 
-| Endpoint | Answer |
+| Endpoint | Purpose |
 |---|---|
-| `GET /api/v1/test/hello` | `{ "userId": ... }` from the required header `X-User-Id` |
-| `GET /api/v1/test/error-400` | `400` with the code `INVALID_INPUT` |
-| `GET /api/v1/test/error-404` | `404` with the code `USER_NOT_FOUND` |
-| `GET /api/v1/test/error-500` | `500` from an unhandled exception |
-
-The error bodies hold `code` and `message` only, not the `ErrorResponse` of API-17.
+| `GET /api/v1/test/me` | Shows whether a caller ID reached the service in `X-Internal-User-Id`; through the gateway, none does |
+| `GET /api/v1/test/errors/bad-request` | Answers a client error, to see how it travels back through the gateway |
+| `GET /api/v1/test/errors/not-found` | Answers a missing resource, for the same check |
+| `GET /api/v1/test/errors/internal` | Fails with an exception that no rule expects, to see the answer and the log line with its stack trace |
 
 ## Configuration
 
@@ -41,4 +39,4 @@ cd services/test-service
 ./mvnw verify
 ```
 
-The only test checks that the application starts.
+The integration tests call the service over HTTP on a random port: the caller header, every simulated error, and the request ID.

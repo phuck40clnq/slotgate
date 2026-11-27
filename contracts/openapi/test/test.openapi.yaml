@@ -1,0 +1,173 @@
+openapi: 3.0.3
+info:
+  title: Test API
+  version: 1.0.0
+  description: >
+    A sandbox with no business logic, for checking routing, headers, error handling and logs through the gateway. The
+    gateway exposes it at `/api/test` instead of `/api/v1/test` and asks for no token, so anyone may call it, no
+    operation declares a security scheme, and every operation also lists the errors that the gateway answers itself.
+    It keeps no state, so repeating, retrying or running an operation concurrently gives the same answer. A path
+    that no operation serves gets `404` (`RESOURCE_NOT_FOUND`), and a method that a path does not serve gets `405`
+    (`METHOD_NOT_ALLOWED`), both as an `ErrorResponse`.
+
+paths:
+  /api/v1/test/me:
+    get:
+      operationId: getCaller
+      summary: Read the caller ID that this service received
+      description: >
+        Answers with the ID from `X-Internal-User-Id`, or with `204` when the header is absent, which is always the
+        case through the gateway.
+      security: []
+      parameters:
+        - $ref: "./../headers/headers.openapi.yaml#/components/parameters/OptionalInternalUserId"
+      responses:
+        "200":
+          description: The request carried a caller ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerResponse"
+        "204":
+          description: The request carried no caller ID
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
+
+  /api/v1/test/errors/bad-request:
+    get:
+      operationId: simulateBadRequest
+      summary: Answer with a simulated client error
+      security: []
+      responses:
+        "400":
+          description: Always (`SIMULATED_BAD_REQUEST`)
+          content:
+            application/json:
+              schema:
+                $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
+
+  /api/v1/test/errors/not-found:
+    get:
+      operationId: simulateNotFound
+      summary: Answer with a simulated missing resource
+      security: []
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Always (`SIMULATED_NOT_FOUND`)
+          content:
+            application/json:
+              schema:
+                $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
+
+  /api/v1/test/errors/internal:
+    get:
+      operationId: simulateInternalError
+      summary: Fail with an exception that no rule expects
+      description: >
+        The global exception handler answers it as any unexpected failure, and logs the stack trace with the request
+        ID.
+      security: []
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          description: Always, from this service (`INTERNAL_ERROR`), or from the gateway when it fails (`GATEWAY_500`)
+          content:
+            application/json:
+              schema:
+                $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
+
+components:
+  responses:
+    InvalidRequest:
+      description: The request breaks this contract, such as a malformed caller ID (`INVALID_REQUEST`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: >
+        The client sent a token that the gateway could not verify (`GATEWAY_401`); a request without a token passes
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    InternalError:
+      description: >
+        An infrastructure failure the caller cannot fix, in this service (`INTERNAL_ERROR`) or in the gateway
+        (`GATEWAY_500`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    BadGateway:
+      description: The gateway could not connect to this service (`GATEWAY_502`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    ServiceUnavailable:
+      description: The gateway knows no instance of this service; the caller may retry later (`GATEWAY_503`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+    GatewayTimeout:
+      description: The connection to this service, or its answer, timed out at the gateway (`GATEWAY_504`)
+      content:
+        application/json:
+          schema:
+            $ref: "./../error/error.openapi.yaml#/components/schemas/ErrorResponse"
+
+  schemas:
+    CallerResponse:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: The caller ID from `X-Internal-User-Id`
+          example: "00000000-0000-0000-0000-00000000000a"
