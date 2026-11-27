@@ -18,7 +18,7 @@ CORE-12 makes the gateway the only public entry, so token checks, identity, cros
 - Token checks, the paths that pass without a token or are refused, and the `X-Internal-User-Id` header work as [authentication](../../docs/architecture/authentication.md) describes.
 - Sections are opened on `seat-inventory-service` itself, not through the gateway, as [its README](../seat-inventory-service/README.md) shows.
 - Every error, including token, routing and network errors, is answered as an `ErrorResponse`, with `traceId` taken from the `X-Trace-Id` request header, or `N/A` without it.
-- Cross-origin requests are accepted from the origins in `CORS_ALLOWED_ORIGINS`, with the methods `GET`, `POST`, `PUT`, `DELETE` and `OPTIONS`, the headers `Authorization` and `Content-Type`, and credentials.
+- Cross-origin requests are accepted from the origins in `CORS_ALLOWED_ORIGINS`, with the methods `GET`, `POST`, `PUT`, `DELETE` and `OPTIONS`, the headers `Authorization` and `Content-Type`, and credentials. Their responses expose `Date` to the page; it comes from the service, because the gateway's own responses carry no `Date`.
 - The gateway publishes and consumes no event.
 
 ## Configuration
@@ -51,7 +51,7 @@ The integration tests start the gateway on a random port, with stand-ins for `au
 
 - `SecurityConfigIT`: `GET /actuator/health` answers without a token, and `POST /api/seat-inventory/sections` gets `403` with a token and `401` without one, while `GET` on the same path still reaches the service
 - `IdentityPropagationFilterIT`: a service receives the token subject in `X-Internal-User-Id`, never a value the client sent
-- `CorsConfigIT`: a preflight passes from an origin in `CORS_ALLOWED_ORIGINS` and gets `403` from any other
+- `CorsConfigIT`: a preflight passes from an origin in `CORS_ALLOWED_ORIGINS` and gets `403` from any other, and a forwarded response exposes the `Date` of the service
 
 `CorsPropertiesTest`, a unit test, checks which values of `CORS_ALLOWED_ORIGINS` the gateway accepts.
 
