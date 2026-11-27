@@ -1,6 +1,10 @@
 package com.example.test.common.error;
 
+import java.util.Optional;
+import java.util.Set;
+
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -39,7 +43,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     ResponseEntity<ErrorResponse> handleUnknownMethod(HttpRequestMethodNotSupportedException exception) {
         log.warn("No operation serves the method: {}", exception.getMethod());
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(ErrorResponse.methodNotAllowed());
+        // RFC 9110 requires a 405 to list in Allow the methods that the path serves.
+        Set<HttpMethod> allowed = Optional.ofNullable(exception.getSupportedHttpMethods()).orElse(Set.of());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+            .allow(allowed.toArray(HttpMethod[]::new))
+            .body(ErrorResponse.methodNotAllowed());
     }
 
     @ExceptionHandler(Exception.class)

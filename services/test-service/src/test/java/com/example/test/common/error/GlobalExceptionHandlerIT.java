@@ -52,4 +52,12 @@ class GlobalExceptionHandlerIT {
         assertThat(response.getStatusCode().value()).isEqualTo(status);
         assertThat(response.getBody().code()).isEqualTo(code);
     }
+
+    @Test
+    void listsTheMethodsThatThePathServesWhenTheMethodIsNotAllowed() {
+        ResponseEntity<ErrorResponse> response =
+            rest.exchange("/api/v1/test/me", HttpMethod.POST, HttpEntity.EMPTY, ErrorResponse.class);
+
+        assertThat(response.getHeaders().getAllow()).containsExactly(HttpMethod.GET);
+    }
 }
